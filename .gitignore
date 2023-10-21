@@ -1,10 +1,4 @@
 .vscode
-a
-a.input
-make.cpp
-makefileold.txt
-mktest.txt
-separation_oracle.cpp
 *.ans
 *.log
 *.input
@@ -13,3 +7,4 @@ separation_oracle.cpp
 *.out
 plot
 use
+data
