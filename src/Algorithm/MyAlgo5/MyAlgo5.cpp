@@ -331,7 +331,6 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
         //     c += X[{SPT[cur_node],cur_node}][req_no];  
         //     r += Y[req_no][{SPT[cur_node],cur_node}];           
         // }
-        cout<<"[while]:"<<cur_node<<endl;
         c += path_graph_X[req_no][cur_node][SPT[cur_node]]; 
         r += path_graph_Y[req_no][cur_node][SPT[cur_node]];   
         best_set.push_back(cur_node);
@@ -339,6 +338,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
     } 
     best_set.push_back(dst);
     best_len = c * exp(r);
+    cout<<"[best_len]"<<best_len<<endl;
     req_Us = best_len;
 
     // cout << "origin path: ";
@@ -362,9 +362,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             cur_node = SPT[cur_node];
         }
     }
-    for(auto it:used_edge){
-        cout<<it.first.first<<","<<it.first.second<<" is "<< it.second<<endl;
-    }
+
     while(1){
         double minimum = numeric_limits<double>::infinity();
         for(int i = 0; i < path_num * qubit_num + 2; i++){                 //creating many new SPT
@@ -422,15 +420,20 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             cur_node = SPT[cur_node];
         }       
         new_path.push_back(dst);
-        
+        for(auto it:new_path){
+            cout<<it<<" ";
+        }
+        cout<<endl;
         double new_len = 0;                                         //counting the new path's U(X,Y)=c* e^r
         c = 0;
         r = 0;
         for(unsigned int i = 0; i < new_path.size() - 1; i++){
-            c += path_graph_X[req_no][cur_node][SPT[cur_node]]; 
-            r += path_graph_Y[req_no][cur_node][SPT[cur_node]]; 
+                c += path_graph_X[req_no][new_path[i]][new_path[i+1]];
+                r += path_graph_Y[req_no][new_path[i]][new_path[i+1]];
+            cout<<"c:"<<path_graph_X[req_no][cur_node][SPT[cur_node]] << ",r:"<<path_graph_Y[req_no][cur_node][SPT[cur_node]]<<endl;
         }
         new_len =  c * exp(r);
+        cout<<"[new_len]"<<new_len<<endl;
         if(new_len < best_len){
             best_len = new_len;
             req_Us = best_len;
@@ -987,6 +990,7 @@ void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vec
                 }else{
                     cout << 0;
                 }
+                //cout << setprecision(2) << path_graph_X[i][j][k] << " ";
             }
             cout << endl;
         }
@@ -1061,8 +1065,8 @@ void MyAlgo5::path_assignment(){
                 req_no = i;
             }
         } 
-        // cout << smallest_U << endl;
-
+        cout <<"smallest req_no:"<<req_no<<"with " << smallest_U << endl;
+        
         find_bottleneck(best_set, req_no);
         
         cout << obj << endl;
