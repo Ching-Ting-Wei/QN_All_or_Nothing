@@ -12,3 +12,4 @@ separation_oracle.cpp
 *.out
 plot
 use
+data
