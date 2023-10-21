@@ -57,7 +57,7 @@ public:
     void readd(vector<map<vector<int>, int>> &path,vector<int> &over_memory,map<vector<int>,int> &over_channel);
     double changing_obj();
     void find_violate();
-    void creat_pathGraph(vector<vector<vector<double>>> &path_graph_X, vector<vector<vector<double>>> &path_graph_Y);
+    void create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vector<vector<vector<double>>> &path_graph_Y, vector<vector<double>> &X_value, vector<vector<double>> & Y_value);
 
     MyAlgo5(string filename, int request_time_limit, int node_time_limit, double swap_prob, double entangle_alpha);
     MyAlgo5(string filename, int request_time_limit, int node_time_limit, double swap_prob, double entangle_alpha, double epsilon);

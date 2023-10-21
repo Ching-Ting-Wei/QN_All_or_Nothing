@@ -113,7 +113,7 @@ int main(int argc, char *argv[]){
     }
     
 
-    int round = 50;
+    int round = 1;
     for(string X_name : X_names) {
         map<string, double> input_parameter = default_setting;
         for(double change_value : change_parameter[X_name]) {         

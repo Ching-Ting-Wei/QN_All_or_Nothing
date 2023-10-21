@@ -263,25 +263,32 @@ vector<int> MyAlgo5::Dijkstra(vector<vector<int>>&copy_graph, int src, int dst, 
 }       
    
 vector<int> MyAlgo5::SepDijkstra(int src, int dst, int req_no, vector<vector<double>> &path_graph_X){ 
+
+    int path_num = 10;
+    vector<vector<double>> transpose_graph(qubit_num * path_num + 2, vector<double>(qubit_num * path_num  + 2));
+    for (int i = 0; i < qubit_num * path_num + 2; i++)
+        for (int j = 0; j < qubit_num * path_num + 2; j++)
+            transpose_graph[i][j] = path_graph_X[j][i];
+    
+
+
     const double INF = numeric_limits<double>::infinity();
-    //const double INF = 100;
-    int n = 12;
-    vector<double> distance(n, INF);
-    vector<int> parent(n, -1);
-    vector<bool> used(n, false);
+    vector<double> distance(qubit_num * path_num + 2, INF);
+    vector<int> parent(qubit_num * path_num + 2, -1);
+    vector<bool> used(qubit_num * path_num + 2, false);
     priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> pq;
 
-    distance[src] = 0;
-    pq.push({0, src});
+    distance[dst] = 0;
+    pq.push({0, dst});
     while(!pq.empty()) {
         int cur_node = pq.top().second;
         pq.pop();
         if(used[cur_node]) continue;
         used[cur_node] = true;
-        for(int i=0; i < n;i++) {
-            if(path_graph_X[cur_node][i]!=-1){
-                if(distance[cur_node] + path_graph_X[cur_node][i] < distance[i]) {
-                    distance[i] = distance[cur_node] + path_graph_X[cur_node][i];
+        for(int i=0; i < qubit_num * path_num + 2;i++) {
+            if(transpose_graph[cur_node][i]!= -1){
+                if(distance[cur_node] + transpose_graph[cur_node][i] < distance[i]) {
+                    distance[i] = distance[cur_node] + transpose_graph[cur_node][i];
                     parent[i] = cur_node;
                     
                     pq.push({distance[i], i});
@@ -291,10 +298,6 @@ vector<int> MyAlgo5::SepDijkstra(int src, int dst, int req_no, vector<vector<dou
         }
     }
     if(distance[dst] >= INF) return{};
-    cout<<"[path]>>>>>>>>>>>>>>>>>>>>>>>>>>"<<endl;
-    for(auto it:parent){
-        cout<<it<<" ";
-    }
     return parent;
 }     
 
@@ -302,9 +305,10 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
    
     vector<int> SPT;                  //nodes' parent in the spanning tree
     vector<int> best_set;
+    int path_num = 10;
     double best_len; 
     int src = 0;
-    int dst = 11;
+    int dst = path_num * qubit_num + 1;
 
     SPT = SepDijkstra(src, dst, req_no, path_graph_X[req_no]);         //the first SPT is get by dijkstra
     cout<<"[SPT]:";
@@ -358,8 +362,8 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
 
     while(1){
         double minimum = numeric_limits<double>::infinity();
-        for(int i = 0; i < 12; i++){                 //creating many new SPT
-            for(int j = i+1; j < 12; j++){
+        for(int i = 0; i < path_num * qubit_num + 2; i++){                 //creating many new SPT
+            for(int j = path_num * i + 1; j < path_num * qubit_num + 2; j++){
                 double temp1 = 0, temp2 = 0;
                 if(path_graph_X[req_no][i][j] != -1){
                     if(SPT[i] == j){      // checking used edge or unused
@@ -921,15 +925,14 @@ vector<map<vector<int>, int>> MyAlgo5::Greedy_rounding(){
 
 }
 
-void MyAlgo5::creat_pathGraph(vector<vector<vector<double>>> &path_graph_X, vector<vector<vector<double>>> &path_graph_Y){
+void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vector<vector<vector<double>>> &path_graph_Y, vector<vector<double>> &X_value, vector<vector<double>> & Y_value)
+{
     // We need to build direct graph
     // [0] represent source node
     // [n*k+2] represent destination node
-    int path_num = all_given_path[i].size();
+    int path_num = all_given_path[0].size();
     
     for(unsigned int i = 0; i < requests.size(); i++ ){
-        vector<double> X_value(path_num);
-        vector<double> Y_value(path_num);
         for(unsigned int j = 0; j < all_given_path[i].size(); j++){
             double c = 0;
             double r = 0;
@@ -937,22 +940,22 @@ void MyAlgo5::creat_pathGraph(vector<vector<vector<double>>> &path_graph_X, vect
                 c += X(all_given_path[i][j][k], all_given_path[i][j][k+1], i);               
                 r += Y[i][{all_given_path[i][j][k], all_given_path[i][j][k+1]}]; 
             }
-            X_value[j] = c;
-            Y_value[j] = r;
+            X_value[i][j] = c;
+            Y_value[i][j] = r;
         }
 
     
 
         for(int j = 0; j < path_num; j++){
-            path_graph_X[i][0][j+1] = X_value[j];
-            path_graph_Y[i][0][j+1] = Y_value[j];
+            path_graph_X[i][0][j+1] = X_value[i][j];
+            path_graph_Y[i][0][j+1] = Y_value[i][j];
         }
 
         for(int j = 0; j < qubit_num - 1; j++){
             for(int k = 0; k < path_num; k++){
                 for(int l = k + 1; l < path_num; l++){
-                    path_graph_X[i][j * 10 + k + 1][(j + 1) * 10 + l + 1] = X_value[((j + 1) * 10 + l + 1) % 10 -1];
-                    path_graph_Y[i][j * 10 + k + 1][(j + 1) * 10 + l + 1] = Y_value[((j + 1) * 10 + l + 1) % 10 -1];
+                    path_graph_X[i][j * path_num + k + 1][(j + 1) * path_num + l + 1] = X_value[i][l];
+                    path_graph_Y[i][j * path_num + k + 1][(j + 1) * path_num + l + 1] = Y_value[i][l];
                 }
             }
         }   
@@ -967,7 +970,7 @@ void MyAlgo5::creat_pathGraph(vector<vector<vector<double>>> &path_graph_X, vect
     
 
     for(unsigned int i = 0; i < requests.size(); i++ ){
-        for(unsigned int j = 0; j < path_num * qubit_num + 2; j++){
+        for(int j = 0; j < path_num * qubit_num + 2; j++){
             for(int k = 0; k < path_num * qubit_num + 2; k++){
                 if(path_graph_X[i][j][k] != -1){
                     cout << "1";
@@ -1005,49 +1008,51 @@ void MyAlgo5::path_assignment(){
     }
     */ 
 
+   int path_num = 10;
 
     initialize();
     
 
     vector<vector<vector<double>>> path_graph_X(requests.size(), vector<vector<double>>(10 * qubit_num + 2, vector<double>(10 * qubit_num + 2,-1)));
     vector<vector<vector<double>>> path_graph_Y(requests.size(), vector<vector<double>>(10 * qubit_num + 2, vector<double>(10 * qubit_num + 2,-1)));
-    creat_pathGraph(path_graph_X, path_graph_Y);
+    vector<vector<double>> X_value(requests.size(), vector<double>(path_num));
+    vector<vector<double>> Y_value(requests.size(), vector<double>(path_num));
+    create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value);
 
+    obj = M * delta;
+    vector<int> best_set;
+    vector<int> cur_set;
 
-    // obj = M * delta;
-    // vector<int> best_set;
-    // vector<int> cur_set;
+    while(obj < 1){
+        int req_no = 0;
+        double smallest_U = numeric_limits<double>::infinity();
+        vector<double> U;
+        vector<vector<int>>all_path_set;
+        all_path_set.resize(requests.size());
+        U.resize(requests.size());
+        // cout<<"\n------New round-------\n";
+        //#pragma omp parallel for
+        for(unsigned int i = 0; i < requests.size(); i++){
+            all_path_set[i] =  separation_oracle(i, U[i], path_graph_X, path_graph_Y);
+            //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
+        }
 
-    // while(obj < 1){
-    //     int req_no = 0;
-    //     double smallest_U = numeric_limits<double>::infinity();
-    //     vector<double> U;
-    //     vector<vector<int>>all_path_set;
-    //     all_path_set.resize(requests.size());
-    //     U.resize(requests.size());
-    //     // cout<<"\n------New round-------\n";
-    //     #pragma omp parallel for
-    //     for(unsigned int i = 0; i < requests.size(); i++){
-    //         all_path_set[i] =  separation_oracle(i, U[i], path_graph_X, path_graph_Y);
-    //         //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
-    //     }
+        for(unsigned int i = 0; i < requests.size(); i++){
+            //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
+            if(U[i] < smallest_U){
+                smallest_U  = U[i];
+                best_set = all_path_set[i];
+                req_no = i;
+            }
+        } 
+        // cout << smallest_U << endl;
 
-    //     for(unsigned int i = 0; i < requests.size(); i++){
-    //         //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
-    //         if(U[i] < smallest_U){
-    //             smallest_U  = U[i];
-    //             best_set = all_path_set[i];
-    //             req_no = i;
-    //         }
-    //     } 
-    //     // cout << smallest_U << endl;
-
-    //     find_bottleneck(best_set, req_no);
+        find_bottleneck(best_set, req_no);
         
-    //     cout << obj << endl;
-    //     // obj = changing_obj();
-    //     // cout<<"changing_obj obj: " << obj << endl ;
-    // }
+        cout << obj << endl;
+        // obj = changing_obj();
+        // cout<<"changing_obj obj: " << obj << endl ;
+    }
 /*
     // calculate();
     find_violate();
