@@ -982,20 +982,20 @@ void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vec
 
  
 
-    for(unsigned int i = 0; i < requests.size(); i++ ){
-        for(int j = 0; j < path_num * qubit_num + 2; j++){
-            for(int k = 0; k < path_num * qubit_num + 2; k++){
-                if(path_graph_X[i][j][k] != -1){
-                    cout << "1";
-                }else{
-                    cout << 0;
-                }
-                //cout << setprecision(2) << path_graph_X[i][j][k] << " ";
-            }
-            cout << endl;
-        }
-        cout << "---------" << endl;
-    }
+    // for(unsigned int i = 0; i < requests.size(); i++ ){
+    //     for(int j = 0; j < path_num * qubit_num + 2; j++){
+    //         for(int k = 0; k < path_num * qubit_num + 2; k++){
+    //             if(path_graph_X[i][j][k] != -1){
+    //                 cout << "1";
+    //             }else{
+    //                 cout << 0;
+    //             }
+    //             //cout << setprecision(2) << path_graph_X[i][j][k] << " ";
+    //         }
+    //         cout << endl;
+    //     }
+    //     cout << "---------" << endl;
+    // }
 
 }
 
@@ -1065,7 +1065,7 @@ void MyAlgo5::path_assignment(){
                 req_no = i;
             }
         } 
-        cout <<"smallest req_no:"<<req_no<<"with " << smallest_U << endl;
+        cout <<"smallest req_no:"<<req_no<<" with " << smallest_U << endl;
         
         find_bottleneck(best_set, req_no);
         
