@@ -7,9 +7,9 @@ mktest.txt
 separation_oracle.cpp
 *.ans
 *.log
+*.input
 *.gch
 *.o
 *.out
 plot
 use
-data

@@ -287,6 +287,9 @@ vector<int> MyAlgo5::SepDijkstra(int src, int dst, int req_no, vector<vector<dou
         used[cur_node] = true;
         for(int i=0; i < qubit_num * path_num + 2;i++) {
             if(transpose_graph[cur_node][i]!= -1){
+                if(cur_node==21 && i == 31){
+                    cout<<"[WHAT happend]"<< distance[cur_node] + transpose_graph[cur_node][i] <<endl;
+                }
                 if(distance[cur_node] + transpose_graph[cur_node][i] < distance[i]) {
                     distance[i] = distance[cur_node] + transpose_graph[cur_node][i];
                     parent[i] = cur_node;
@@ -328,12 +331,12 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
         //     c += X[{SPT[cur_node],cur_node}][req_no];  
         //     r += Y[req_no][{SPT[cur_node],cur_node}];           
         // }
+        cout<<"[while]:"<<cur_node<<endl;
         c += path_graph_X[req_no][cur_node][SPT[cur_node]]; 
         r += path_graph_Y[req_no][cur_node][SPT[cur_node]];   
         best_set.push_back(cur_node);
         cur_node = SPT[cur_node];
     } 
-    cout<<"[2]>>>>>>>>>>>>>>>>>>>>>>>>>"<<endl;
     best_set.push_back(dst);
     best_len = c * exp(r);
     req_Us = best_len;
@@ -351,7 +354,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
     for(unsigned int i = 0; i < SPT.size(); i++){
         int cur_node = i;
         while(cur_node != dst){
-            if(used_edge.find({cur_node,SPT[cur_node]}) != used_edge.end()){
+            if(used_edge.find({cur_node,SPT[cur_node]}) != used_edge.end() || SPT[cur_node] == -1){
                 break;
             }
             used_edge[{cur_node,SPT[cur_node]}] = true;
@@ -359,11 +362,13 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             cur_node = SPT[cur_node];
         }
     }
-
+    for(auto it:used_edge){
+        cout<<it.first.first<<","<<it.first.second<<" is "<< it.second<<endl;
+    }
     while(1){
         double minimum = numeric_limits<double>::infinity();
         for(int i = 0; i < path_num * qubit_num + 2; i++){                 //creating many new SPT
-            for(int j = path_num * i + 1; j < path_num * qubit_num + 2; j++){
+            for(int j = i + 1; j < path_num * qubit_num + 2; j++){
                 double temp1 = 0, temp2 = 0;
                 if(path_graph_X[req_no][i][j] != -1){
                     if(SPT[i] == j){      // checking used edge or unused
@@ -388,16 +393,18 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
                             if(used_edge.find({i,j}) != used_edge.end()){
                                 continue;
                             }
+                            if(minimum > -temp1 / temp2){
+                                new_edge = {i,j};
+                                minimum = -temp1 / temp2;
+                            }
                         }
-                        if(minimum > -temp1 / temp2){
-                            new_edge = {i,j};
-                            minimum = -temp1 / temp2;
-                        }
+
                     }   
                 }
             }
         }        // 找到最小的 edge 
-
+        
+        cout<<"[new_edge]"<<new_edge.first<<","<<new_edge.second<<endl;
         if(minimum == numeric_limits<double>::infinity()){   //原本設計是有break,但之後用不到
             break;
         }else{
@@ -425,11 +432,9 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
         if(new_len < best_len){
             best_len = new_len;
             req_Us = best_len;
-            
             best_set = new_path;                                            //路線修改,新的spt產生
         } 
         
-       
     }    
     return best_set;                                                  
 }
@@ -946,19 +951,22 @@ void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vec
 
     
 
-        for(int j = 0; j < path_num; j++){
+        for(int j = 0; j < path_num - qubit_num + 1; j++){
             path_graph_X[i][0][j+1] = X_value[i][j];
             path_graph_Y[i][0][j+1] = Y_value[i][j];
         }
 
         for(int j = 0; j < qubit_num - 1; j++){
             for(int k = 0; k < path_num; k++){
+                if((path_num - k) - (qubit_num - j) < 0) continue;
                 for(int l = k + 1; l < path_num; l++){
+                    if((path_num - l) - (qubit_num - 1 - j) < 0) continue;
                     path_graph_X[i][j * path_num + k + 1][(j + 1) * path_num + l + 1] = X_value[i][l];
                     path_graph_Y[i][j * path_num + k + 1][(j + 1) * path_num + l + 1] = Y_value[i][l];
                 }
             }
         }   
+
 
         for(int j = 0; j < path_num; j++){
             path_graph_X[i][path_num * (qubit_num - 1) + j + 1][path_num * qubit_num + 1] = 0;
@@ -967,7 +975,7 @@ void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vec
        
     }
 
-    
+ 
 
     for(unsigned int i = 0; i < requests.size(); i++ ){
         for(int j = 0; j < path_num * qubit_num + 2; j++){
@@ -1036,7 +1044,13 @@ void MyAlgo5::path_assignment(){
             all_path_set[i] =  separation_oracle(i, U[i], path_graph_X, path_graph_Y);
             //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
         }
-
+        for(auto it:all_path_set){
+            cout<<"[SET]";
+            for(auto it2:it){
+                cout<<it2<<" ";
+            }
+            cout<<endl;
+        }
         for(unsigned int i = 0; i < requests.size(); i++){
             //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
             if(U[i] < smallest_U){
