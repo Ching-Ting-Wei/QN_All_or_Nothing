@@ -287,9 +287,6 @@ vector<int> MyAlgo5::SepDijkstra(int src, int dst, int req_no, vector<vector<dou
         used[cur_node] = true;
         for(int i=0; i < qubit_num * path_num + 2;i++) {
             if(transpose_graph[cur_node][i]!= -1){
-                if(cur_node==21 && i == 31){
-                    cout<<"[WHAT happend]"<< distance[cur_node] + transpose_graph[cur_node][i] <<endl;
-                }
                 if(distance[cur_node] + transpose_graph[cur_node][i] < distance[i]) {
                     distance[i] = distance[cur_node] + transpose_graph[cur_node][i];
                     parent[i] = cur_node;
@@ -314,11 +311,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
     int dst = path_num * qubit_num + 1;
 
     SPT = SepDijkstra(src, dst, req_no, path_graph_X[req_no]);         //the first SPT is get by dijkstra
-    cout<<"[SPT]:";
-    for(auto it:SPT){
-        cout<<it<<" ";
-    }
-    cout<<endl;
+
     int cur_node = src;                                     //counting the first path's U(X,Y)=c* e^r
     double c = 0;                                           //c = SUM[u,v]:alpha(u)+alpha(v)+beta(u,v)==X[u,v]
     double r = 0;                                           //r = SUM[u,v]:-ln(Pr(u,v))==Y[u,v]
@@ -404,7 +397,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             }
         }        // 找到最小的 edge 
         
-        cout<<"[new_edge]"<<new_edge.first<<","<<new_edge.second<<endl;
+
         if(minimum == numeric_limits<double>::infinity()){   //原本設計是有break,但之後用不到
             break;
         }else{
@@ -420,17 +413,13 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             cur_node = SPT[cur_node];
         }       
         new_path.push_back(dst);
-        for(auto it:new_path){
-            cout<<it<<" ";
-        }
-        cout<<endl;
+
         double new_len = 0;                                         //counting the new path's U(X,Y)=c* e^r
         c = 0;
         r = 0;
         for(unsigned int i = 0; i < new_path.size() - 1; i++){
-                c += path_graph_X[req_no][new_path[i]][new_path[i+1]];
-                r += path_graph_Y[req_no][new_path[i]][new_path[i+1]];
-            cout<<"c:"<<path_graph_X[req_no][cur_node][SPT[cur_node]] << ",r:"<<path_graph_Y[req_no][cur_node][SPT[cur_node]]<<endl;
+            c += path_graph_X[req_no][new_path[i]][new_path[i+1]];
+            r += path_graph_Y[req_no][new_path[i]][new_path[i+1]];
         }
         new_len =  c * exp(r);
         cout<<"[new_len]"<<new_len<<endl;
@@ -439,53 +428,113 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             req_Us = best_len;
             best_set = new_path;                                            //路線修改,新的spt產生
         } 
-        
     }    
     return best_set;                                                  
 }
 
-void MyAlgo5::find_bottleneck(vector<int> path, int req_no){
-    
+void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
     double min_s_u = numeric_limits<double>::infinity();
     double min_s_uv = numeric_limits<double>::infinity();
     double s_i = requests[req_no].get_send_limit();                             //request[no] min
     vector<double> s_u(graph.get_size() + 5);
-    vector<double> s_uv(graph.get_size() + 5);                                               
+    vector<vector<double>>s_uv;
+    vector<int> memory_use(graph.get_size() + 5, 0);
+    vector<vector<int>> channel_use;
+    vector<int> path;
 
-   
-    for(unsigned int i = 0; i < path.size(); i++){
-        if(i == 0 || i == path.size() - 1)
-            s_u[path[i]] = graph.Node_id2ptr(path[i])->get_memory_cnt();        //if src or dst,then only cost 1
-        else
-            s_u[path[i]] = graph.Node_id2ptr(path[i])->get_memory_cnt() / 2.0;    //else cost 2
-        if(s_u[path[i]] < min_s_u)
-            min_s_u = s_u[path[i]];
+    channel_use.resize(graph.get_size() + 5);
+    s_uv.resize(graph.get_size() + 5);
+    for(auto &it:channel_use){
+        it.resize(graph.get_size() + 5);
     }
-
-    for(unsigned int i = 0; i < path.size() - 1; i++){
-        s_uv[i] = graph.get_channel_size(path[i], path[i+1]);                   //channel min
-        if(s_uv[i] < min_s_uv)
-            min_s_uv = s_uv[i];
+    for(auto &it:s_uv){
+        it.resize(graph.get_size() + 5);
     }
-
-    int rate = 10;
-    double s = min(min_s_u, min(min_s_uv, s_i));
-    for(int i = 0; i < rate; i++){
-        if(x_i_p.find(path) != x_i_p.end())                                         //add flow to path
-            x_i_p[path] += s;
-        else
-            x_i_p[path] = s;
-
-        for(auto id : path){
-            obj += (alpha[id] * (1 + epsilon * s / s_u[id]) - alpha[id]) * graph.Node_id2ptr(id)->get_memory_cnt();;            //alter alpha,beta
-            alpha[id] = alpha[id] * (1 + epsilon * s / s_u[id]);
+    int path_num = 10;                                               
+/*
+    for(unsigned int i = 1; i < set.size()-1; i++){
+        cout<<"[Real Path]:";
+        for(unsigned int j = 0; j < all_given_path[req_no][set[i]%path_num-1].size(); j++){
+            cout<<all_given_path[req_no][set[i]%path_num-1][j]<<" ";
+        }
+        cout<<endl;
+    }
+*/
+    // We should calculate every node's memory usage
+    for(unsigned int i = 1; i < set.size()-1; i++){
+        for(unsigned int j = 0; j < all_given_path[req_no][set[i]%path_num-1].size(); j++){
+            if(j == 0 || j == all_given_path[req_no][set[i]%path_num-1].size() - 1){
+                memory_use[all_given_path[req_no][set[i]%path_num-1][j]] += 1;            
+            }
+            else{
+                memory_use[all_given_path[req_no][set[i]%path_num-1][j]] += 2;
+            }
         }
 
-        for(unsigned int i = 0; i < path.size() - 1; i++){
-            obj += (beta[{path[i], path[i+1]}] * (1 + epsilon * s / s_uv[i]) -  beta[{path[i], path[i+1]}]) * graph.get_channel_size(path[i], path[i+1]);;
-            beta[{path[i], path[i+1]}] = beta[{path[i], path[i+1]}] * (1 + epsilon * s / s_uv[i]);
-            beta[{path[i+1], path[i]}] = beta[{path[i+1], path[i]}] * (1 + epsilon * s / s_uv[i]);
-        } 
+        for(unsigned int j = 0; j < all_given_path[req_no][set[i]%path_num-1].size() - 1; j++){
+            if(all_given_path[req_no][set[i]%path_num-1][j] < all_given_path[req_no][set[i]%path_num-1][j+1]){
+                channel_use[all_given_path[req_no][set[i]%path_num-1][j]][all_given_path[req_no][set[i]%path_num-1][j+1]]++;
+            }
+            else{
+                channel_use[all_given_path[req_no][set[i]%path_num-1][j+1]][all_given_path[req_no][set[i]%path_num-1][j]]++;
+            }
+        }
+    }
+/*
+    for(auto it:memory_use){
+        cout<<it<<" ";
+    }
+    cout<<endl;
+*/
+    for(int i = 0; i < graph.get_size(); i++){
+        if(memory_use[i] == 0){
+            continue;
+        }
+        s_u[i] = graph.Node_id2ptr(i)->get_memory_cnt() / memory_use[i] ; 
+        if(s_u[i] < min_s_u)
+            min_s_u = s_u[i];
+    }
+
+    for(int i = 0; i < graph.get_size(); i++){
+        for(int j = i+1; j < graph.get_size(); j++){
+            if(s_uv[i][j] == 0){
+                continue;
+            }
+            s_uv[i][j] = graph.get_channel_size(i , j) / channel_use[i][j];
+            if(s_uv[i][j] < min_s_uv){
+                min_s_u = s_uv[i][j];
+            }
+        }
+    }
+    
+    int rate = 1;
+    double s = min(min_s_u, min(min_s_uv, s_i));
+    for(int i = 0; i < rate; i++){
+        for(unsigned int j = 1; j < set.size()-1; j++){
+            path=all_given_path[req_no][set[j]%path_num-1];
+            if(x_i_p.find(path) != x_i_p.end())                                         //add flow to path
+                x_i_p[path] += s;
+            else
+                x_i_p[path] = s;
+        }
+        for(int j = 0; j < graph.get_size(); j++){
+            if(memory_use[j] == 0){
+                continue;
+            }
+            obj += (alpha[j] * (1 + epsilon * s / s_u[j]) - alpha[j]) * graph.Node_id2ptr(j)->get_memory_cnt();;            //alter alpha,beta
+            alpha[j] = alpha[j] * (1 + epsilon * s / s_u[j]);
+        }
+
+        for(int i = 0; i < graph.get_size(); i++){
+            for(int j = i+1; j < graph.get_size(); j++){
+                if(s_uv[i][j] == 0){
+                    continue;
+                }
+                obj += (beta[{i,j}] * (1 + epsilon * s / s_uv[i][j]) -  beta[{i,j}]) * graph.get_channel_size(i,j);;
+                beta[{i,j}] = beta[{i,j}] * (1 + epsilon * s / s_uv[i][j]);
+                beta[{j,i}] = beta[{j,i}] * (1 + epsilon * s / s_uv[i][j]);
+            }
+        }
         obj += (tau[req_no] * (1 +epsilon * s) - tau[req_no]);
         tau[req_no] = tau[req_no] * (1 + epsilon * s);
     }
@@ -1050,6 +1099,7 @@ void MyAlgo5::path_assignment(){
             all_path_set[i] =  separation_oracle(i, U[i], path_graph_X, path_graph_Y);
             //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
         }
+        /*
         for(auto it:all_path_set){
             cout<<"[SET]";
             for(auto it2:it){
@@ -1057,6 +1107,7 @@ void MyAlgo5::path_assignment(){
             }
             cout<<endl;
         }
+        */
         for(unsigned int i = 0; i < requests.size(); i++){
             //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
             if(U[i] < smallest_U){
@@ -1068,18 +1119,32 @@ void MyAlgo5::path_assignment(){
         cout <<"smallest req_no:"<<req_no<<" with " << smallest_U << endl;
         
         find_bottleneck(best_set, req_no);
-        
+        create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value);
         cout << obj << endl;
         // obj = changing_obj();
         // cout<<"changing_obj obj: " << obj << endl ;
     }
-/*
-    // calculate();
+
+    //calculate();
+    cout<<"BEFORE VIOLATE>>>>>>>>>>>>>"<<endl;
+    for(auto it:x_i_p){
+        for(auto it2:it.first){
+            cout<<it2<<" ";
+        }
+        cout<<" with "<<it.second<<endl;
+    }
     find_violate();
-    calculate();
+    cout<<"AFTER VIOLATE>>>>>>>>>>>>>"<<endl;
+    for(auto it:x_i_p){
+        for(auto it2:it.first){
+            cout<<it2<<" ";
+        }
+        cout<<" with "<<it.second<<endl;
+    }
+    /*
     vector<map<vector<int>, int>>path = Greedy_rounding();
     res["change_edge_num"] = change_edge_num;
     res["diff_edge_num"] = diff_num;
-*/
+    */
 }   
 
