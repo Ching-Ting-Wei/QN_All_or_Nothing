@@ -390,9 +390,11 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
                             cur_node = SPT[cur_node];
                         }
                         if(temp2 < 0 && temp1 > 0) {
+                            /*
                             if(used_edge.find({i,j}) != used_edge.end()){
                                 continue;
                             }
+                            */
                             if(minimum > -temp1 / temp2){
                                 new_edge = {i,j};
                                 minimum = -temp1 / temp2;
