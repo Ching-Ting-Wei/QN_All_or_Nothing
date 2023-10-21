@@ -923,34 +923,52 @@ vector<map<vector<int>, int>> MyAlgo5::Greedy_rounding(){
 
 void MyAlgo5::creat_pathGraph(vector<vector<vector<double>>> &path_graph_X, vector<vector<vector<double>>> &path_graph_Y){
     // We need to build direct graph
-    // [0][0] represent source node
-    // [k][k] represent destination node
+    // [0] represent source node
+    // [n*k+2] represent destination node
+    int path_num = all_given_path[i].size();
+    
     for(unsigned int i = 0; i < requests.size(); i++ ){
-        for(unsigned int j = 0; j < 10; j++){
-
+        vector<double> X_value(path_num);
+        vector<double> Y_value(path_num);
+        for(unsigned int j = 0; j < all_given_path[i].size(); j++){
             double c = 0;
             double r = 0;
             for(unsigned int k = 0; k < all_given_path[i][j].size() - 1; k++){
                 c += X(all_given_path[i][j][k], all_given_path[i][j][k+1], i);               
                 r += Y[i][{all_given_path[i][j][k], all_given_path[i][j][k+1]}]; 
             }
-            path_graph_X[i][0][j+1] = c;
-            path_graph_Y[i][0][j+1] = r;
-            for(unsigned int k = 1; k <= j; k++ ){
-                path_graph_X[i][k][j+1] = c;
-                path_graph_Y[i][k][j+1] = r;
-            }
-           
+            X_value[j] = c;
+            Y_value[j] = r;
         }
-        for(unsigned int j = 1; j <= 10; j++){
-            path_graph_X[i][j][11] = 0;
-            path_graph_Y[i][j][11] = 1;
+
+    
+
+        for(int j = 0; j < path_num; j++){
+            path_graph_X[i][0][j+1] = X_value[j];
+            path_graph_Y[i][0][j+1] = Y_value[j];
+        }
+
+        for(int j = 0; j < qubit_num - 1; j++){
+            for(int k = 0; k < path_num; k++){
+                for(int l = k + 1; l < path_num; l++){
+                    path_graph_X[i][j * 10 + k + 1][(j + 1) * 10 + l + 1] = X_value[((j + 1) * 10 + l + 1) % 10 -1];
+                    path_graph_Y[i][j * 10 + k + 1][(j + 1) * 10 + l + 1] = Y_value[((j + 1) * 10 + l + 1) % 10 -1];
+                }
+            }
         }   
+
+        for(int j = 0; j < path_num; j++){
+            path_graph_X[i][path_num * (qubit_num - 1) + j + 1][path_num * qubit_num + 1] = 0;
+            path_graph_Y[i][path_num * (qubit_num - 1) + j + 1][path_num * qubit_num + 1] = 1;
+        }
+       
     }
-/*
+
+    
+
     for(unsigned int i = 0; i < requests.size(); i++ ){
-        for(unsigned int j = 0; j < 12; j++){
-            for(int k = 0; k < 12; k++){
+        for(unsigned int j = 0; j < path_num * qubit_num + 2; j++){
+            for(int k = 0; k < path_num * qubit_num + 2; k++){
                 if(path_graph_X[i][j][k] != -1){
                     cout << "1";
                 }else{
@@ -961,7 +979,7 @@ void MyAlgo5::creat_pathGraph(vector<vector<vector<double>>> &path_graph_X, vect
         }
         cout << "---------" << endl;
     }
-*/
+
 }
 
 void MyAlgo5::path_assignment(){
@@ -991,45 +1009,45 @@ void MyAlgo5::path_assignment(){
     initialize();
     
 
-    vector<vector<vector<double>>> path_graph_X(requests.size(), vector<vector<double>>(12, vector<double>(12,-1)));
-    vector<vector<vector<double>>> path_graph_Y(requests.size(), vector<vector<double>>(12, vector<double>(12,-1)));
+    vector<vector<vector<double>>> path_graph_X(requests.size(), vector<vector<double>>(10 * qubit_num + 2, vector<double>(10 * qubit_num + 2,-1)));
+    vector<vector<vector<double>>> path_graph_Y(requests.size(), vector<vector<double>>(10 * qubit_num + 2, vector<double>(10 * qubit_num + 2,-1)));
     creat_pathGraph(path_graph_X, path_graph_Y);
 
 
-    obj = M * delta;
-    vector<int> best_set;
-    vector<int> cur_set;
+    // obj = M * delta;
+    // vector<int> best_set;
+    // vector<int> cur_set;
 
-    while(obj < 1){
-        int req_no = 0;
-        double smallest_U = numeric_limits<double>::infinity();
-        vector<double> U;
-        vector<vector<int>>all_path_set;
-        all_path_set.resize(requests.size());
-        U.resize(requests.size());
-        // cout<<"\n------New round-------\n";
-        #pragma omp parallel for
-        for(unsigned int i = 0; i < requests.size(); i++){
-            all_path_set[i] =  separation_oracle(i, U[i], path_graph_X, path_graph_Y);
-            //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
-        }
+    // while(obj < 1){
+    //     int req_no = 0;
+    //     double smallest_U = numeric_limits<double>::infinity();
+    //     vector<double> U;
+    //     vector<vector<int>>all_path_set;
+    //     all_path_set.resize(requests.size());
+    //     U.resize(requests.size());
+    //     // cout<<"\n------New round-------\n";
+    //     #pragma omp parallel for
+    //     for(unsigned int i = 0; i < requests.size(); i++){
+    //         all_path_set[i] =  separation_oracle(i, U[i], path_graph_X, path_graph_Y);
+    //         //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
+    //     }
 
-        for(unsigned int i = 0; i < requests.size(); i++){
-            //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
-            if(U[i] < smallest_U){
-                smallest_U  = U[i];
-                best_set = all_path_set[i];
-                req_no = i;
-            }
-        } 
-        // cout << smallest_U << endl;
+    //     for(unsigned int i = 0; i < requests.size(); i++){
+    //         //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
+    //         if(U[i] < smallest_U){
+    //             smallest_U  = U[i];
+    //             best_set = all_path_set[i];
+    //             req_no = i;
+    //         }
+    //     } 
+    //     // cout << smallest_U << endl;
 
-        find_bottleneck(best_set, req_no);
+    //     find_bottleneck(best_set, req_no);
         
-        cout << obj << endl;
-        // obj = changing_obj();
-        // cout<<"changing_obj obj: " << obj << endl ;
-    }
+    //     cout << obj << endl;
+    //     // obj = changing_obj();
+    //     // cout<<"changing_obj obj: " << obj << endl ;
+    // }
 /*
     // calculate();
     find_violate();
