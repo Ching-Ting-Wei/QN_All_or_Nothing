@@ -44,7 +44,7 @@ void MyAlgo2::initialize(){
     }
 
     for(unsigned  i = 0; i < requests.size(); i++){                               //tau=delta/ri
-        tau.emplace_back(delta / requests[i].get_send_limit());
+        tau.emplace_back(delta / requests[i].get_send_demand());
     }
     Y.resize(requests.size() + 5);
     for(int i = 0; i < graph.get_size(); i++){
@@ -296,7 +296,7 @@ void MyAlgo2::find_bottleneck(vector<int> path, int req_no){
     
     double min_s_u = numeric_limits<double>::infinity();
     double min_s_uv = numeric_limits<double>::infinity();
-    double s_i = requests[req_no].get_send_limit();                             //request[no] min
+    double s_i = requests[req_no].get_send_demand();                             //request[no] min
     vector<double> s_u(graph.get_size() + 5);
     vector<double> s_uv(graph.get_size() + 5);                                               
 
@@ -359,7 +359,7 @@ double MyAlgo2::changing_obj(){
     }
 
     for(unsigned int i = 0;i < requests.size(); i++){
-        temp_obj += tau[i] * requests[i].get_send_limit();
+        temp_obj += tau[i] * requests[i].get_send_demand();
     }
     return temp_obj;
 }
@@ -429,7 +429,7 @@ void MyAlgo2::find_violate(){
                 break;
             }
         }
-        cur_magni = it.second / requests[req_no].get_send_limit();
+        cur_magni = it.second / requests[req_no].get_send_demand();
         if(cur_magni > max_magni){
             max_magni = cur_magni;
         }
@@ -486,8 +486,8 @@ vector<map<vector<int>, int>> MyAlgo2::rounding(){
             accumulate.push_back(total_prob);
             used_prob += it.second;
         }
-        used_I += (int)(requests[i].get_send_limit()- used_prob);               //unused_I=取底[ri - sum(request.I) - (unused.I)]
-        distri_I=requests[i].get_send_limit()-used_I;
+        used_I += (int)(requests[i].get_send_demand()- used_prob);               //unused_I=取底[ri - sum(request.I) - (unused.I)]
+        distri_I=requests[i].get_send_demand()-used_I;
 
         accumulate.push_back(0.0);
         // cout<<"total_prob:"<<total_prob<<" distri_I:"<<distri_I<<endl;
@@ -690,7 +690,7 @@ void MyAlgo2::readd(vector<map<vector<int>, int>> &path,vector<int> &over_memory
     while(flag){
         flag = false;
         for(unsigned int i = 0; i < re.size(); i++){
-            if(requests[re[i].second].get_send_limit() > requests[re[i].second].get_cur_send()){
+            if(requests[re[i].second].get_send_demand() > requests[re[i].second].get_cur_send()){
                 vector<int> each_path = re[i].first;
                 bool assign = true;
                 for(unsigned int j = 0; j < each_path.size() - 1; j++){
@@ -848,8 +848,8 @@ vector<map<vector<int>, int>> MyAlgo2::Greedy_rounding(){
 			*/
 			fractional_xip.emplace_back(frac_prob, i, it.first);
         }
-        //used_I[i] += (int)(requests[i].get_send_limit() - used_prob);               //unused_I=取底[ri - sum(request.I) - (unused.I)]
-        //distri_I = requests[i].get_send_limit()-used_I[i];
+        //used_I[i] += (int)(requests[i].get_send_demand() - used_prob);               //unused_I=取底[ri - sum(request.I) - (unused.I)]
+        //distri_I = requests[i].get_send_demand()-used_I[i];
 
         
         
@@ -880,7 +880,7 @@ vector<map<vector<int>, int>> MyAlgo2::Greedy_rounding(){
 		double x_prob;
 		int request_id;
 		tie(x_prob, request_id, extra_path) = it;
-		if(find_width(extra_path) >= 1 && used_I[request_id] < requests[request_id].get_send_limit()){
+		if(find_width(extra_path) >= 1 && used_I[request_id] < requests[request_id].get_send_demand()){
 			assign_resource(extra_path, 1, request_id);
 			used_I[request_id] += 1;
             I_request[request_id][extra_path]++;
@@ -893,8 +893,8 @@ vector<map<vector<int>, int>> MyAlgo2::Greedy_rounding(){
 		int request_id;
 		tie(x_prob, request_id, extra_path) = it;
 		int width = 0;
-		int extra_send_limit = requests[request_id].get_send_limit() - used_I[request_id];
-		width = min(find_width(extra_path), extra_send_limit);
+		int extra_send_demand = requests[request_id].get_send_demand() - used_I[request_id];
+		width = min(find_width(extra_path), extra_send_demand);
 		if(width >= 1){
 			assign_resource(extra_path, width, request_id);
             used_I[request_id] += width;
@@ -903,11 +903,11 @@ vector<map<vector<int>, int>> MyAlgo2::Greedy_rounding(){
 	}
 	for(int request_id=0;request_id<(int)requests.size();request_id++){
 		cerr<<"GG: It work?"<<endl;
-		while(requests[request_id].get_send_limit() - used_I[request_id] > 0){
+		while(requests[request_id].get_send_demand() - used_I[request_id] > 0){
 			vector<int> extra_path = BFS(requests[request_id].get_source(), requests[request_id].get_destination());
 			int width = 0;
 			if(extra_path.size() != 0){
-				width = min(find_width(extra_path), requests[request_id].get_send_limit() - used_I[request_id]);
+				width = min(find_width(extra_path), requests[request_id].get_send_demand() - used_I[request_id]);
 				assign_resource(extra_path, width, request_id);
 				used_I[request_id] += width;
 			}

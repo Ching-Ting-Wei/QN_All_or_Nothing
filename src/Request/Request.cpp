@@ -5,8 +5,8 @@ Request::Request(int source, int destination, const int& time_limit):source(sour
     if(DEBUG)cerr<<"new Request"<<endl;
 }
 
-Request::Request(int source, int destination, const int& time_limit, int send_limit):source(source),
-    destination(destination), time_limit(time_limit), send_limit(send_limit), status(REQUEST_UNFINISHED), send_path_length(0){
+Request::Request(int source, int destination, const int& time_limit, int send_demand):source(source),
+    destination(destination), time_limit(time_limit), send_demand(send_demand), status(REQUEST_UNFINISHED), send_path_length(0){
     if(DEBUG)cerr<<"new Request"<<endl;
 }
 
@@ -32,8 +32,8 @@ int Request::get_time_limit(){
     return time_limit;
 }
 
-int Request::get_send_limit(){
-    return send_limit;
+int Request::get_send_demand(){
+    return send_demand;
 };
 
 int Request::get_path_num(){
@@ -112,7 +112,7 @@ void Request::entangle(){
 }
 
 void Request::swap(){
-    cout<< "request limit: " << send_limit << endl;
+    cout<< "request limit: " << send_demand << endl;
     cout<<"swapping path number: " << paths.size() << endl;
     for(auto &path:paths){
         if(path == nullptr)continue;

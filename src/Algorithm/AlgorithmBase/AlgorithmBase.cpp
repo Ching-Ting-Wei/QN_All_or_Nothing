@@ -56,7 +56,7 @@ void AlgorithmBase::base_next_time_slot(){
         if(requests[reqno].get_throughput() == 0){
             req_success_ratio = 0.0;
         }else{
-            req_success_ratio = (double)requests[reqno].get_throughput() / (double)requests[reqno].get_send_limit();
+            req_success_ratio = (double)requests[reqno].get_throughput() / (double)requests[reqno].get_send_demand();
             if(max_over_ratio <= req_success_ratio){
                 max_over_ratio = req_success_ratio;
             }
@@ -82,8 +82,8 @@ void AlgorithmBase::base_next_time_slot(){
         finished_reqno.push_back(reqno);
         if(requests[reqno].get_throughput() != 0){
             cout << "reqno: " << reqno << " " <<  requests[reqno].get_throughput() << endl;
-            if(requests[reqno].get_throughput() >= requests[reqno].get_send_limit()){
-                res["throughputs"]+= requests[reqno].get_send_limit();
+            if(requests[reqno].get_throughput() >= requests[reqno].get_send_demand()){
+                res["throughputs"]+= requests[reqno].get_send_demand();
             }else{
                 res["throughputs"]+= requests[reqno].get_throughput();
             }  

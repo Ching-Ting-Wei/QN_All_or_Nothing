@@ -23,6 +23,7 @@ private:
     vector<map<pair<int,int>, double>> Y;
     vector<double> alpha;
     map<vector<int>, double> x_i_p;
+    vector<map<vector<int>, double>> x_i_s;
     map<pair<int,int>, double> beta;
     vector<vector<vector<int>>> all_source_target_path;
     vector<vector<vector<int>>> all_given_path;

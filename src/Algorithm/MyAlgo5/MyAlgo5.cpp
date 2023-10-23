@@ -331,7 +331,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
     } 
     best_set.push_back(dst);
     best_len = c * exp(r);
-    cout<<"[best_len]"<<best_len<<endl;
+    //cout<<"[best_len]"<<best_len<<endl;
     req_Us = best_len;
 
     // cout << "origin path: ";
@@ -422,13 +422,14 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             r += path_graph_Y[req_no][new_path[i]][new_path[i+1]];
         }
         new_len =  c * exp(r);
-        cout<<"[new_len]"<<new_len<<endl;
+        //cout<<"[new_len]"<<new_len<<endl;
         if(new_len < best_len){
             best_len = new_len;
             req_Us = best_len;
             best_set = new_path;                                            //路線修改,新的spt產生
         } 
     }    
+
     return best_set;                                                  
 }
 
@@ -506,7 +507,13 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
             }
         }
     }
-    
+    /*
+    cout<<"[set]";
+    for(auto it:set){
+        cout<<it<<" ";
+    }
+    cout<<endl;
+    */
     int rate = 1;
     double s = min(min_s_u, min(min_s_uv, s_i));
     for(int i = 0; i < rate; i++){
@@ -517,6 +524,11 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
             else
                 x_i_p[path] = s;
         }
+        if(x_i_s[req_no].find(set) != x_i_s[req_no].end())
+            x_i_s[req_no][set] += s;
+        else
+            x_i_s[req_no][set] = s;
+        
         for(int j = 0; j < graph.get_size(); j++){
             if(memory_use[j] == 0){
                 continue;
@@ -635,8 +647,13 @@ void MyAlgo5::find_violate(){
     //cout << "Magnification:" << max_magni << endl;
 
     for(auto &x : x_i_p){
-
         x.second /= max_magni;
+    }
+
+    for(auto &s : x_i_s){
+        for(auto &s1 :s){
+            s1.second /= max_magni;
+        }
     }
     //check memory_and_channel
     /*
@@ -802,7 +819,7 @@ void MyAlgo5::readd(vector<map<vector<int>, int>> &path,vector<int> &over_memory
     while(flag){
         flag = false;
         for(unsigned int i = 0; i < re.size(); i++){
-            if(requests[re[i].second].get_send_limit() > requests[re[i].second].get_cur_send()){
+            if(requests[re[i].second].get_send_demand() > requests[re[i].second].get_cur_send()){
                 vector<int> each_path = re[i].first;
                 bool assign = true;
                 for(unsigned int j = 0; j < each_path.size() - 1; j++){
@@ -944,7 +961,7 @@ vector<map<vector<int>, int>> MyAlgo5::Greedy_rounding(){
 		double x_prob;
 		int request_id;
 		tie(x_prob, request_id, extra_path) = it;
-		if(find_width(extra_path) >= 1 && used_I[request_id] < requests[request_id].get_send_limit()){
+		if(find_width(extra_path) >= 1 && used_I[request_id] < requests[request_id].get_send_demand()){
 			assign_resource(extra_path, 1, request_id);
 			used_I[request_id] += 1;
             I_request[request_id][extra_path]++;
@@ -957,8 +974,8 @@ vector<map<vector<int>, int>> MyAlgo5::Greedy_rounding(){
 		int request_id;
 		tie(x_prob, request_id, extra_path) = it;
 		int width = 0;
-		int extra_send_limit = requests[request_id].get_send_limit() - used_I[request_id];
-		width = min(find_width(extra_path), extra_send_limit);
+		int extra_send_demand = requests[request_id].get_send_demand() - used_I[request_id];
+		width = min(find_width(extra_path), extra_send_demand);
 		if(width >= 1){
 			assign_resource(extra_path, width, request_id);
             used_I[request_id] += width;
@@ -967,11 +984,11 @@ vector<map<vector<int>, int>> MyAlgo5::Greedy_rounding(){
 	}
 	for(int request_id=0;request_id<(int)requests.size();request_id++){
 		// cerr<<"GG: It work?"<<endl;
-		while(requests[request_id].get_send_limit() - used_I[request_id] > 0){
+		while(requests[request_id].get_send_demand() - used_I[request_id] > 0){
 			vector<int> extra_path = BFS(requests[request_id].get_source(), requests[request_id].get_destination());
 			int width = 0;
 			if(extra_path.size() != 0){
-				width = min(find_width(extra_path), requests[request_id].get_send_limit() - used_I[request_id]);
+				width = min(find_width(extra_path), requests[request_id].get_send_demand() - used_I[request_id]);
 				assign_resource(extra_path, width, request_id);
 				used_I[request_id] += width;
 			}
@@ -1028,54 +1045,43 @@ void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vec
         }
        
     }
-
- 
-
-    // for(unsigned int i = 0; i < requests.size(); i++ ){
-    //     for(int j = 0; j < path_num * qubit_num + 2; j++){
-    //         for(int k = 0; k < path_num * qubit_num + 2; k++){
-    //             if(path_graph_X[i][j][k] != -1){
-    //                 cout << "1";
-    //             }else{
-    //                 cout << 0;
-    //             }
-    //             //cout << setprecision(2) << path_graph_X[i][j][k] << " ";
-    //         }
-    //         cout << endl;
-    //     }
-    //     cout << "---------" << endl;
-    // }
-
+/*
+     for(unsigned int i = 0; i < requests.size(); i++ ){
+         for(int j = 0; j < path_num * qubit_num + 2; j++){
+             for(int k = 0; k < path_num * qubit_num + 2; k++){
+                 
+                 if(path_graph_X[i][j][k] != -1){
+                     cout << "1";
+                 }else{
+                     cout << 0;
+                 }
+                 
+                 //cout << setprecision(2) << path_graph_X[i][j][k] << " ";
+             }
+             cout << endl;
+         }
+         cout << "---------" << endl;
+     }
+*/
 }
 
 void MyAlgo5::path_assignment(){
 
     all_given_path.resize(requests.size());
+    x_i_s.resize(requests.size());
     for(unsigned int i = 0; i < requests.size(); i++){
         cout<<"[request]:"<<i<<endl;
         yen(requests[i].get_source(),requests[i].get_destination(),10,i);
     }
-
-    /*
-    show given path
-    for(auto it:all_given_path){
-        cout<<"Next Request -----------"<<endl;
-        for(auto it2:it){
-            cout<<"[Path]";
-            for(auto it3:it2){
-                cout<<it3<<" ";
-            }
-            cout<<endl;
-        }
-        cout<<endl;
-    }
-    */ 
-
     int path_num = 10;
 
     initialize();
     
-
+        cout<<"[alpha]";
+        for(auto it:alpha){
+            cout<<it<<" ";
+        }
+        cout<<"[alpha end]"<<endl;
     vector<vector<vector<double>>> path_graph_X(requests.size(), vector<vector<double>>(10 * qubit_num + 2, vector<double>(10 * qubit_num + 2,-1)));
     vector<vector<vector<double>>> path_graph_Y(requests.size(), vector<vector<double>>(10 * qubit_num + 2, vector<double>(10 * qubit_num + 2,-1)));
     vector<vector<double>> X_value(requests.size(), vector<double>(path_num));
@@ -1085,7 +1091,7 @@ void MyAlgo5::path_assignment(){
     obj = M * delta;
     vector<int> best_set;
     vector<int> cur_set;
-
+    
     while(obj < 1){
         int req_no = 0;
         double smallest_U = numeric_limits<double>::infinity();
@@ -1120,19 +1126,13 @@ void MyAlgo5::path_assignment(){
         
         find_bottleneck(best_set, req_no);
         create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value);
-        cout << obj << endl;
+
+        //cout << obj << endl;
         // obj = changing_obj();
         // cout<<"changing_obj obj: " << obj << endl ;
     }
 
     //calculate();
-    cout<<"BEFORE VIOLATE>>>>>>>>>>>>>"<<endl;
-    for(auto it:x_i_p){
-        for(auto it2:it.first){
-            cout<<it2<<" ";
-        }
-        cout<<" with "<<it.second<<endl;
-    }
     find_violate();
     cout<<"AFTER VIOLATE>>>>>>>>>>>>>"<<endl;
     for(auto it:x_i_p){
@@ -1141,11 +1141,19 @@ void MyAlgo5::path_assignment(){
         }
         cout<<" with "<<it.second<<endl;
     }
-    
+    for(auto it:x_i_s){
+        for(auto it2:it){
+            for(auto it3:it2.first){
+                cout<<it3<<" ";
+            }
+            cout<<" contain "<<it2.second<<endl;
+        }
+    }
+
     //vector<map<vector<int>, int>>path = Greedy_rounding();
-    /*
+
     res["change_edge_num"] = change_edge_num;
     res["diff_edge_num"] = diff_num;
-    */
+    
 }   
 

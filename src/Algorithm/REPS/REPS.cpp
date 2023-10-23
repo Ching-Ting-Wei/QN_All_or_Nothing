@@ -138,7 +138,7 @@ void REPS::PFT_LP(vector<double> &t_plum, vector<map<pair<int, int>, double>> &f
         if(get_limit_r_status()){
             //For QRP
             for(int i=0;i<(int)requests.size();i++){
-                model.addConstr(t[i] <= requests[i].get_send_limit(), "1QRP" + to_string(i));
+                model.addConstr(t[i] <= requests[i].get_send_demand(), "1QRP" + to_string(i));
             }
         }
 
@@ -300,7 +300,7 @@ void REPS::EPS_LP(vector<vector<double>> &t_bar, vector<vector<map<pair<int, int
                     expr = 0;
                     expr += t[i][k];
                 }
-                model.addConstr(expr <= requests[i].get_send_limit(), "2QRP" + to_string(i));
+                model.addConstr(expr <= requests[i].get_send_demand(), "2QRP" + to_string(i));
             }
         }
 
@@ -430,7 +430,7 @@ void REPS::path_assignment(){
 
                 
                 //2023 ALTER
-                // if(requests[req_no].get_paths().size() < requests[0].get_send_limit()){
+                // if(requests[req_no].get_paths().size() < requests[0].get_send_demand()){
                 //     requests[req_no] += graph.build_path(path_nodes);
                 // }
                 requests[req_no] += graph.build_path(path_nodes);
@@ -449,7 +449,7 @@ void REPS::entangle(){
     AlgorithmBase::base_entangle();
     // for(auto &request: requests){
     //     vector<Path*> path = request.get_paths();
-    //     int limit = request.get_send_limit();
+    //     int limit = request.get_send_demand();
     //     if(path.size() >= limit){
     //         for(int path_id = 0;path_id < limit; path_id++){
     //             path[path_id]->entangle();
@@ -482,7 +482,7 @@ void REPS::swap(){
     map<pair<int, int>, vector<Channel*>> remain_channels;
     for(auto &request: requests){
         vector<Path*> path = request.get_paths();
-        int limit = request.get_send_limit();
+        int limit = request.get_send_demand();
         if(0){
             for(int path_id = 0;path_id < limit; path_id++){
                 vector<Channel*> channels = path[path_id]->get_channels();
@@ -514,7 +514,7 @@ void REPS::swap(){
         }
         vector<Path*> path = requests[i].get_paths();
         // cout << "req_no: "<< i << " "<< path.size() << endl;
-        // if((int)requests[i].get_paths().size() > requests[i].get_send_limit()) cerr << "REPS path more than r(i)!!" << endl;
+        // if((int)requests[i].get_paths().size() > requests[i].get_send_demand()) cerr << "REPS path more than r(i)!!" << endl;
     }
 
     AlgorithmBase::base_swap();
@@ -561,7 +561,7 @@ tuple<vector<int>, double, bool> REPS::DFS(int req_no, map<pair<int, int>, doubl
     bool set_flag = false;
     while(width--){ // revise
         set_flag = true;
-        // if(requests[req_no].get_paths().size() < requests[0].get_send_limit()){
+        // if(requests[req_no].get_paths().size() < requests[0].get_send_demand()){
         //     requests[req_no] += graph.build_path(path_nodes);
         // }
 
@@ -588,7 +588,7 @@ void REPS::ELS(){
     set<int> T;
     for(int i = 0; i < (int)requests.size(); i++){ 
         if(get_limit_r_status()){
-            if((int)ELS_P[i].size() < requests[i].get_send_limit()) { // 第 i 個 request 不能有超過 r(i) 條路徑可以嘗試 (for QRP)
+            if((int)ELS_P[i].size() < requests[i].get_send_demand()) { // 第 i 個 request 不能有超過 r(i) 條路徑可以嘗試 (for QRP)
                 T.insert(i);
             } 
         }
@@ -645,7 +645,7 @@ void REPS::ELS(){
                 y[v][u] ++;
             }
             if(get_limit_r_status()){
-                if((int)ELS_P[req_no].size() == requests[req_no].get_send_limit()) T.erase(req_no);
+                if((int)ELS_P[req_no].size() == requests[req_no].get_send_demand()) T.erase(req_no);
             }
 
             continue;
@@ -656,7 +656,7 @@ void REPS::ELS(){
     // line 14
     for(int i = 0; i < (int)requests.size(); i++){
         if(get_limit_r_status()){
-            if((int)ELS_P[i].size() < requests[i].get_send_limit()) {  // 第 i 個 request 不能有超過 r(i) 條路徑可以嘗試 (for QRP)
+            if((int)ELS_P[i].size() < requests[i].get_send_demand()) {  // 第 i 個 request 不能有超過 r(i) 條路徑可以嘗試 (for QRP)
                 T.insert(i);
             }
         }
@@ -712,7 +712,7 @@ void REPS::ELS(){
             y[v][u] ++;
         }
         if(get_limit_r_status()){
-            if((int)ELS_P[req_no].size() == requests[req_no].get_send_limit()) T.erase(req_no);
+            if((int)ELS_P[req_no].size() == requests[req_no].get_send_demand()) T.erase(req_no);
         }
     }
     cout<<"ELS finished!"<<endl;

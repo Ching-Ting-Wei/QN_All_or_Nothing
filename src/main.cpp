@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
     default_setting["entangle_alpha"] = 0.0002;
     default_setting["new_request_cnt"] = 10;
     default_setting["total_time_slot"] = 1;
-    default_setting["request_avg"] = 10;
+    default_setting["request_avg"] = 3;
     default_setting["epsilon"] = 0.2;    
 
     // not used in this paper
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]){
     change_parameter["social_density"] = {0.25, 0.5, 0.75, 1}; 
     change_parameter["new_request_cnt"] = {20, 30, 40, 50, 60};
     change_parameter["request_avg"] = {3, 5, 7, 9, 11};
-    change_parameter["num_of_node"] = {/*20,30,*/ 40/*, 50, 60*/};
+    change_parameter["num_of_node"] = {/*20,*/30/*, 40, 50, 60*/};
     change_parameter["memory_cnt_avg"] = { 3, 5, 7, 9, 11};
 
     vector<string> X_names =  { "num_of_node"/*,"swap_prob","entangle_alpha", "resource_ratio", "request_avg", "new_request_cnt" ,  "memory_cnt_avg" , "area_alpha"*/}; 

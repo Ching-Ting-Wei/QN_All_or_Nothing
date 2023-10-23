@@ -13,7 +13,7 @@ void Greedy::path_assignment(){
         for(int reqno = 0; reqno < (int)requests.size(); reqno++){
             Request &request = requests[reqno];
             if(get_limit_r_status()){
-                if(request.get_paths().size() >= request.get_send_limit()){
+                if(request.get_paths().size() >= request.get_send_demand()){
                     continue;
                 }
             }
