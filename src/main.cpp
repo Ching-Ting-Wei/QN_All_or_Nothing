@@ -69,11 +69,11 @@ int main(int argc, char *argv[]){
     default_setting["channel_cnt_avg"] = 4;
     default_setting["resource_ratio"] = 1;
 
-    default_setting["swap_prob"] = 0.9;
+    default_setting["swap_prob"] = 0.97;
     default_setting["entangle_alpha"] = 0.0002;
-    default_setting["new_request_cnt"] = 3;
+    default_setting["new_request_cnt"] = 10;
     default_setting["total_time_slot"] = 1;
-    default_setting["request_avg"] = 3;
+    default_setting["request_avg"] = 10;
     default_setting["epsilon"] = 0.2;    
 
     // not used in this paper

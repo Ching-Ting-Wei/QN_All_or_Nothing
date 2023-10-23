@@ -435,7 +435,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
 void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
     double min_s_u = numeric_limits<double>::infinity();
     double min_s_uv = numeric_limits<double>::infinity();
-    double s_i = requests[req_no].get_send_limit();                             //request[no] min
+    double s_i = 1;                             //request[no] min
     vector<double> s_u(graph.get_size() + 5);
     vector<vector<double>>s_uv;
     vector<int> memory_use(graph.get_size() + 5, 0);
@@ -609,7 +609,7 @@ void MyAlgo5::find_violate(){
                 break;
             }
         }
-        cur_magni = it.second / requests[req_no].get_send_limit();
+        cur_magni = it.second / 1;
         if(cur_magni > max_magni){
             max_magni = cur_magni;
         }
@@ -1071,7 +1071,7 @@ void MyAlgo5::path_assignment(){
     }
     */ 
 
-   int path_num = 10;
+    int path_num = 10;
 
     initialize();
     
@@ -1141,8 +1141,9 @@ void MyAlgo5::path_assignment(){
         }
         cout<<" with "<<it.second<<endl;
     }
+    
+    //vector<map<vector<int>, int>>path = Greedy_rounding();
     /*
-    vector<map<vector<int>, int>>path = Greedy_rounding();
     res["change_edge_num"] = change_edge_num;
     res["diff_edge_num"] = diff_num;
     */
