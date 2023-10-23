@@ -264,7 +264,7 @@ vector<int> MyAlgo5::Dijkstra(vector<vector<int>>&copy_graph, int src, int dst, 
    
 vector<int> MyAlgo5::SepDijkstra(int src, int dst, int req_no, vector<vector<double>> &path_graph_X){ 
 
-    int path_num = 10;
+    
     vector<vector<double>> transpose_graph(qubit_num * path_num + 2, vector<double>(qubit_num * path_num  + 2));
     for (int i = 0; i < qubit_num * path_num + 2; i++)
         for (int j = 0; j < qubit_num * path_num + 2; j++)
@@ -305,7 +305,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
    
     vector<int> SPT;                  //nodes' parent in the spanning tree
     vector<int> best_set;
-    int path_num = 10;
+    
     double best_len; 
     int src = 0;
     int dst = path_num * qubit_num + 1;
@@ -451,7 +451,7 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
     for(auto &it:s_uv){
         it.resize(graph.get_size() + 5);
     }
-    int path_num = 10;                                               
+                                                   
 /*
     for(unsigned int i = 1; i < set.size()-1; i++){
         cout<<"[Real Path]:";
@@ -974,8 +974,8 @@ vector<map<vector<int>, int>> MyAlgo5::Greedy_rounding(){
 		int request_id;
 		tie(x_prob, request_id, extra_path) = it;
 		int width = 0;
-		int extra_send_demand = requests[request_id].get_send_demand() - used_I[request_id];
-		width = min(find_width(extra_path), extra_send_demand);
+		int extra_send_limit = requests[request_id].get_send_demand() - used_I[request_id];
+		width = min(find_width(extra_path), extra_send_limit);
 		if(width >= 1){
 			assign_resource(extra_path, width, request_id);
             used_I[request_id] += width;
@@ -1073,7 +1073,8 @@ void MyAlgo5::path_assignment(){
         cout<<"[request]:"<<i<<endl;
         yen(requests[i].get_source(),requests[i].get_destination(),10,i);
     }
-    int path_num = 10;
+
+    
 
     initialize();
     

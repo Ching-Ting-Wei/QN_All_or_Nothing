@@ -29,7 +29,8 @@ private:
     vector<vector<vector<int>>> all_given_path;
     int change_edge_num = 0; 
     int diff_num = 0;
-    int qubit_num = 3;
+    int path_num=10;
+    int qubit_num;
     double epsilon = 0.2;
     double obj = 0;
     double delta;
