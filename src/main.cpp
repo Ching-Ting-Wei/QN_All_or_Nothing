@@ -71,14 +71,14 @@ int main(int argc, char *argv[]){
     default_setting["num_of_node"] = 80;
     default_setting["area_alpha"] = 0.5;
     default_setting["memory_cnt_avg"] = 10;
-    default_setting["channel_cnt_avg"] = 5;
+    default_setting["channel_cnt_avg"] = 4;
     default_setting["resource_ratio"] = 1;
     
     default_setting["swap_prob"] = 0.97;
     default_setting["entangle_alpha"] = 0.0002;
     default_setting["new_request_cnt"] = 10;
     default_setting["total_time_slot"] = 1;
-    default_setting["request_avg"] = 2;
+    default_setting["request_avg"] = 5;
     default_setting["epsilon"] = 0.2;    
     default_setting["value"] = 10;
     default_setting["given_path_num"] = 10 ;
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]){
     change_parameter["memory_cnt_avg"] = { 5 , 7, 9, 11 , 13};
     change_parameter["given_path_num"] = { 10, 11, 12, 13, 14, 15};
 
-    vector<string> X_names =  { /*"resource_ratio", "new_request_cnt" ,  "memory_cnt_avg" , "area_alpha" ,"given_path_num",*/"num_of_node",/*"swap_prob","entangle_alpha","request_avg"*/}; 
+    vector<string> X_names =  { "new_request_cnt" /*,"swap_prob","entangle_alpha","resource_ratio",   "memory_cnt_avg" , "area_alpha" ,"given_path_num","num_of_node",,"request_avg"*/}; 
     vector<string> Y_names =  {  "use_memory", "use_channel","drop_req_no" ,"total_earn", "value_per_memory", "value_per_channel"
                              /*"throughputs" ,"max_over_ratio","S_D_complete_ratio_difference", "path_success_avg" ,
                              "path_success_avg_before_ent", "new_success_ratio","use_memory_ratio","use_channel_ratio",
