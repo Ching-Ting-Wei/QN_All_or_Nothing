@@ -5,8 +5,8 @@ Request::Request(int source, int destination, const int& time_limit):source(sour
     if(DEBUG)cerr<<"new Request"<<endl;
 }
 
-Request::Request(int source, int destination, const int& time_limit, int send_demand):source(source),
-    destination(destination), time_limit(time_limit), send_demand(send_demand), status(REQUEST_UNFINISHED), send_path_length(0){
+Request::Request(int source, int destination, const int& time_limit, int send_demand , int value):source(source),
+    destination(destination), time_limit(time_limit), send_demand(send_demand), value(value), status(REQUEST_UNFINISHED), send_path_length(0){
     if(DEBUG)cerr<<"new Request"<<endl;
 }
 
@@ -34,6 +34,10 @@ int Request::get_time_limit(){
 
 int Request::get_send_demand(){
     return send_demand;
+};
+
+int Request::get_value(){
+    return value;
 };
 
 int Request::get_path_num(){
@@ -121,6 +125,7 @@ void Request::swap(){
         if(path->get_entangle_succ()) {  
             if( path->swap()){
                 throughput++;
+
             }
         }
         

@@ -11,9 +11,9 @@
 
 #include "Network/Graph/Graph.h"
 #include "Algorithm/AlgorithmBase/AlgorithmBase.h"
-// #include "Algorithm/Greedy/Greedy.h"
-// #include "Algorithm/QCAST/QCAST.h"
-// #include "Algorithm/REPS/REPS.h"
+#include "Algorithm/Greedy/Greedy.h"
+#include "Algorithm/QCAST/QCAST.h"
+#include "Algorithm/REPS/REPS.h"
 // #include "Algorithm/MyAlgo3/MyAlgo3.h"
 // #include "Algorithm/MyGreedyAlgo/MyGreedyAlgo.h"
 #include "Algorithm/MyAlgo5/MyAlgo5.h"
@@ -22,7 +22,7 @@ using namespace std;
 
 
 
-Request generate_new_request(int num_of_node, int time_limit, int min_request, int max_request){
+Request generate_new_request(int num_of_node, int time_limit, int min_request, int max_request, int min_value, int max_value){
     //亂數引擎 
     random_device rd;
     default_random_engine generator = default_random_engine(rd());
@@ -32,12 +32,17 @@ Request generate_new_request(int num_of_node, int time_limit, int min_request, i
     
     uniform_int_distribution<int> unif2(min_request, max_request);
     int request = unif2(generator);
-    return Request(node1, node2, time_limit, request);
-}
 
+    uniform_int_distribution<int> unif3(min_value, max_value);
+    int value = unif3(generator);
+    return Request(node1, node2, time_limit, request, value);
+}
+/*
 Request generate_fix_request(int node1, int node2, int time_limit, int request){//demo
     return Request(node1, node2, time_limit, request);
 }
+*/
+
 
 void create_dir_if_not_exists(const std::string &path) {
 	struct stat info;
@@ -66,16 +71,17 @@ int main(int argc, char *argv[]){
     default_setting["num_of_node"] = 30;
     default_setting["area_alpha"] = 0.5;
     default_setting["memory_cnt_avg"] = 10;
-    default_setting["channel_cnt_avg"] = 4;
+    default_setting["channel_cnt_avg"] = 5;
     default_setting["resource_ratio"] = 1;
-
+    
     default_setting["swap_prob"] = 0.97;
     default_setting["entangle_alpha"] = 0.0002;
     default_setting["new_request_cnt"] = 3;
     default_setting["total_time_slot"] = 1;
-    default_setting["request_avg"] = 3;
+    default_setting["request_avg"] = 2;
     default_setting["epsilon"] = 0.2;    
-
+    default_setting["value"] = 10;
+    default_setting["given_path_num"] = 5 ;
     // not used in this paper
     default_setting["node_time_limit"] = 1;
     default_setting["social_density"] = 0.5;
@@ -89,20 +95,20 @@ int main(int argc, char *argv[]){
     change_parameter["entangle_alpha"] = {0.0004, 0.0003,0.0002, 0.0001, 0};
     change_parameter["min_fidelity"] = {0.5, 0.7, 0.75, 0.85, 0.95};
     change_parameter["resource_ratio"] = {0.5, 1, 1.5, 2, 2.5};
-    change_parameter["area_alpha"] = {0.02, 0.04, 0.06, 0.08, 0.1}; 
+    change_parameter["area_alpha"] = {0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9}; 
     change_parameter["social_density"] = {0.25, 0.5, 0.75, 1}; 
     change_parameter["new_request_cnt"] = {20, 30, 40, 50, 60};
-    change_parameter["request_avg"] = {3, 5, 7, 9, 11};
-    change_parameter["num_of_node"] = {/*20,*/30/*, 40, 50, 60*/};
-    change_parameter["memory_cnt_avg"] = { 3, 5, 7, 9, 11};
+    //change_parameter["request_avg"] = {3,4,5};
+    change_parameter["num_of_node"] = { 30/*60, 70 , 80, 90, 100*/};
+    change_parameter["memory_cnt_avg"] = { 5 , 7, 9, 11 , 13};
+    change_parameter["given_path_num"] = { 10, 11, 12, 13, 14, 15};
 
-    vector<string> X_names =  { "num_of_node"/*,"swap_prob","entangle_alpha", "resource_ratio", "request_avg", "new_request_cnt" ,  "memory_cnt_avg" , "area_alpha"*/}; 
-    vector<string> Y_names =  { /*"max_over_ratio",*/"throughputs"
-                             /*,"use_channel_ratio",  "use_memory_ratio", "use_memory", "use_channel", "total_channel", "total_memory" "throughput_memory_ratio", "throughput_channel_ratio",
-                             "S_D_complete_ratio_difference", "path_success_avg" ,
-                             "path_success_avg_before_ent", "new_success_ratio",
+    vector<string> X_names =  { /*"resource_ratio", "new_request_cnt" ,  "memory_cnt_avg" , "area_alpha" ,"given_path_num",*/"num_of_node",/*"swap_prob","entangle_alpha","request_avg"*/}; 
+    vector<string> Y_names =  {  "use_memory", "use_channel","drop_req_no" ,"total_earn", "value_per_memory", "value_per_channel"
+                             /*"throughputs" ,"max_over_ratio","S_D_complete_ratio_difference", "path_success_avg" ,
+                             "path_success_avg_before_ent", "new_success_ratio","use_memory_ratio","use_channel_ratio",
 			                 "divide_cnt", "change_edge_num", "diff_edge_num", "diff_rate","edge_difference"*/};
-    vector<string> algo_names = { /*"MyAlgo3","Greedy_Nonlimit","QCAST_Nonlimit","REPS_Nonlimit", "MyAlgo3_0.100000", "MyAlgo3_0.300000*/ "MyAlgo5"};//{ "MyAlgo3_0.400000","MyAlgo3_0.600000", "MyAlgo3_0.800000"}; //"MyAlgo", "MyGreedyAlgo", "MyAlgo2", 
+    vector<string> algo_names = { /*"MyAlgo3",*/"Greedy_Nonlimit","QCAST_Nonlimit","REPS_Nonlimit",/* "MyAlgo3_0.100000", "MyAlgo3_0.300000,*/ "MyAlgo5"};//{ "MyAlgo3_0.400000","MyAlgo3_0.600000", "MyAlgo3_0.800000"}; //"MyAlgo", "MyGreedyAlgo", "MyAlgo2", 
 
     // init result
     for(string X_name : X_names) {
@@ -113,7 +119,7 @@ int main(int argc, char *argv[]){
     }
     
 
-    int round = 1;
+    int round = 50;
     for(string X_name : X_names) {
         map<string, double> input_parameter = default_setting;
         for(double change_value : change_parameter[X_name]) {         
@@ -124,6 +130,7 @@ int main(int argc, char *argv[]){
             input_parameter[X_name] = change_value;
             
             int num_of_node = input_parameter["num_of_node"];
+            int given_path_num = input_parameter["given_path_num"];
             // double social_density = input_parameter["social_density"];
             double area_alpha = input_parameter["area_alpha"];
             double resource_ratio = input_parameter["resource_ratio"];
@@ -131,8 +138,10 @@ int main(int argc, char *argv[]){
             int max_memory_cnt = input_parameter["memory_cnt_avg"] * resource_ratio + 2;
             int min_channel_cnt = input_parameter["channel_cnt_avg"] * resource_ratio - 2;
             int max_channel_cnt = input_parameter["channel_cnt_avg"] * resource_ratio + 2;
-            int max_request = input_parameter["request_avg"] + 2;
-            int min_request = input_parameter["request_avg"] - 2;
+            int max_request = input_parameter["request_avg"] + 1;
+            int min_request = input_parameter["request_avg"] - 1;
+            int max_value = input_parameter["value"] + 5;
+            int min_value = input_parameter["value"] - 5;
             double min_fidelity = input_parameter["min_fidelity"];
             double max_fidelity = input_parameter["max_fidelity"];
 
@@ -170,18 +179,18 @@ int main(int argc, char *argv[]){
                 vector<AlgorithmBase*> algorithms;
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha));
                 //algorithms.emplace_back(new Greedy(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , true));
-                //algorithms.emplace_back(new Greedy(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
+                algorithms.emplace_back(new Greedy(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
                 //algorithms.emplace_back(new QCAST(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , true));
-                //algorithms.emplace_back(new QCAST(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
+                algorithms.emplace_back(new QCAST(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
                 //algorithms.emplace_back(new REPS(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ,true ));
-                //algorithms.emplace_back(new REPS(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ,false ));
+                algorithms.emplace_back(new REPS(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ,false ));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha, 0.1 ));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha, 0.3));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha, 0.4 ));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha, 0.6 ));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha, 0.8 )); 
-                algorithms.emplace_back(new MyAlgo5(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ));
+                algorithms.emplace_back(new MyAlgo5(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , given_path_num));
                 // 建完圖，刪除 input 檔避免佔太多空間
                 // command = "rm -f " + file_path + "input/round_" + round_str + ".input";
                 // if(system((command).c_str()) != 0){
@@ -198,7 +207,7 @@ int main(int argc, char *argv[]){
                         bool check_no_repeat;
                         do{
                             check_no_repeat=true;
-                            Request new_request = generate_new_request(num_of_node, request_time_limit, min_request, max_request);
+                            Request new_request = generate_new_request(num_of_node, request_time_limit, min_request, max_request, min_value, max_value);
                             for(auto it:algorithms[0]->get_requests()){
                                 if(it.get_source()==new_request.get_source() && it.get_destination()==new_request.get_destination()){
                                     check_no_repeat=false;
@@ -234,7 +243,8 @@ int main(int argc, char *argv[]){
                         ofs<<"-----------run "<< algo->get_name() << " ---------"<<endl;
                         algo->run();
 
-                        ofs<<"total_throughputs : "<<algo->get_res("throughputs")<<endl;
+                        //ofs<<"total_throughputs : "<<algo->get_res("throughputs")<<endl;
+                        ofs<<"total_earn :"<<algo->get_res("total_earn")<<endl;
                         ofs<<"-----------run "<<algo->get_name() << " ---------end"<<endl;
                     }
                     
@@ -242,20 +252,19 @@ int main(int argc, char *argv[]){
                 ofs<<"---------------in round " <<T<<" -------------end" <<endl;
                 ofs << endl;
                 for(auto &algo:algorithms){
-                    ofs<<"("<<algo->get_name()<<")total throughput = "<<algo->get_res("throughputs")<<endl;
+                    //ofs<<"("<<algo->get_name()<<")total throughput = "<<algo->get_res("throughputs")<<endl;
+                    ofs<<"("<<algo->get_name()<<")total earn = "<<algo->get_res("total_earn")<<endl;
                 }
                 cout<<"---------------in round " <<T<<" -------------end" <<endl;
                 cout << endl;
                 for(auto &algo:algorithms){
-                    cout<<"("<<algo->get_name()<<")total throughput = "<<algo->get_res("throughputs")<<endl;
+                    //cout<<"("<<algo->get_name()<<")total throughput = "<<algo->get_res("throughputs")<<endl;
+                    cout<<"("<<algo->get_name()<<")total earn = "<<algo->get_res("total_earn")<<endl;
                 }
                 
                 for(auto &algo:algorithms){
                     for(string Y_name : Y_names) {
                         result[T][algo->get_name()][Y_name] = algo->get_res(Y_name);
-                        if(Y_name == "throughputs" && (algo->get_name() == "MyAlgo3" || algo->get_name() == "MyAlgo3_0.100000"|| algo->get_name() == "MyAlgo3_0.300000")){
-                            result[T][algo->get_name()]["primal"] = algo->get_res("primal");
-                        }
                     }
                 }
                 
@@ -292,17 +301,19 @@ int main(int argc, char *argv[]){
             //         result[T][algo_name]["fail-finished_ratio"] = 1 - result[T][algo_name]["succ-finished_ratio"];
             //         result[T][algo_name]["path_length"] = result[T][algo_name]["path_length"] / result[T][algo_name]["finished_throughputs"];
             //         result[T][algo_name]["divide_cnt"] = result[T][algo_name]["divide_cnt"] / result[T][algo_name]["finished_throughputs"];
-                     result[T][algo_name]["use_memory_ratio"] = result[T][algo_name]["use_memory"] / result[T][algo_name]["total_memory"];
-                     result[T][algo_name]["use_channel_ratio"] = result[T][algo_name]["use_channel"] / result[T][algo_name]["total_channel"];
-                     result[T][algo_name]["throughput_memory_ratio"] = result[T][algo_name]["throughputs"] / result[T][algo_name]["use_memory"];
-                     result[T][algo_name]["throughput_channel_ratio"] = result[T][algo_name]["throughputs"] /  result[T][algo_name]["use_channel"];
+            //        result[T][algo_name]["use_memory_ratio"] = result[T][algo_name]["use_memory"] / result[T][algo_name]["total_memory"];
+            //       result[T][algo_name]["use_channel_ratio"] = result[T][algo_name]["use_channel"] / result[T][algo_name]["total_channel"];
+                     result[T][algo_name]["value_per_memory"] = result[T][algo_name]["total_earn"] / result[T][algo_name]["use_memory"]  ;                  
+                     result[T][algo_name]["value_per_channel"] = result[T][algo_name]["total_earn"] / result[T][algo_name]["use_channel"];
                  }
              }
+
+            /*
             for(int T = 0; T < round; T++){
                 // result[T]["MyAlgo3"]["diff_rate"] = result[T]["MyAlgo3"]["change_edge_num"] / result[T]["MyAlgo3"]["diff_edge_num"];
                 result[T]["MyAlgo"]["edge_difference"] = result[T]["MyAlgo"]["change_edge_num"] - result[T]["MyAlgo3"]["change_edge_num"];
             }
-            
+            */
             // double min_UB;
             // for(int T = 0; T < round; T++){
             // cout<<result[T]["MyAlgo3"]["primal"]<<" "<<result[T]["MyAlgo3_0.100000"]["primal"]<<" "<<result[T]["MyAlgo3_0.300000"]["primal"]<<endl;
@@ -325,9 +336,11 @@ int main(int argc, char *argv[]){
                     ofs << sum_res[algo_name][Y_name] / round << ' ';
                     
                 }
+                /*
                 if(Y_name == "throughputs"){
                     ofs << sum_res["MyAlgo3"]["primal"] / round << " ";
                 }
+                */
                 ofs << endl;
                 ofs.close();
             }

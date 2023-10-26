@@ -20,6 +20,7 @@ double AlgorithmBase::get_swap_prob(){
     return swap_prob;
 }
 
+
 bool AlgorithmBase::get_limit_r_status(){
     return limit_r_or_not;
 }
@@ -33,6 +34,8 @@ void AlgorithmBase::base_next_time_slot(){
     double max_req_success_ratio = 0;
     double total_req_success_ratio = 0;
     double max_over_ratio = 0;
+    int total_earn = 0;
+    int drop_req_no = 0;
     graph.refresh();
     graph.release();
     for(auto &request: requests){
@@ -48,11 +51,16 @@ void AlgorithmBase::base_next_time_slot(){
         before_ent_path_num += requests[reqno].get_before_ent_path_num();
         total_success_prob += requests[reqno].get_total_prob();
         before_ent_total_success_prob += requests[reqno].get_before_ent_total_prob();
-        
+
         for(auto it:requests[reqno].get_before_ent_path_prob_vt()){
             res_vt.push_back(it);
         }
-        
+        if(requests[reqno].get_path_num() >= requests[reqno].get_send_demand()){
+            total_earn += requests[reqno].get_value();
+        }
+        else{
+            drop_req_no ++;
+        }
         if(requests[reqno].get_throughput() == 0){
             req_success_ratio = 0.0;
         }else{
@@ -89,7 +97,8 @@ void AlgorithmBase::base_next_time_slot(){
             }  
         }
     }
-   
+    res["total_earn"] = total_earn;
+    res["drop_req_no"] = drop_req_no;
     res["path_success_avg"] = total_success_prob / total_path_num;
     res["path_success_avg_before_ent"] = before_ent_total_success_prob / before_ent_path_num;
     res["S_D_complete_ratio_difference"] = max_req_success_ratio - min_req_success_ratio;
@@ -222,6 +231,7 @@ void AlgorithmBase::assign_resource(vector<int> path, int width, int reqno){
         cerr<<"error:\twidth = INF"<<endl;
         exit(1);
     }
+
     while(width-- > 0){
        
         requests[reqno] +=  graph.build_path(path);

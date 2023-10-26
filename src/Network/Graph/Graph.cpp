@@ -229,7 +229,17 @@ void Graph::set_weight(int node1_id, int node2_id, double value){
         channel.set_weight(value);
     }
 }
-
+int Graph::remain_channel(int node1_id,int node2_id){
+    int cnt=0;
+    const Node &node1 = nodes[node1_id];
+    const Node &node2 = nodes[node2_id];
+    for(Channel &channel: channels[make_pair(node1, node2)]){
+        if(channel.is_assignable()){
+            cnt++;
+        }
+    }
+    return cnt;
+}
 int Graph::remain_resource_cnt(int node1_id, int node2_id, bool is1_repeater /*= true*/, bool is2_repeater /*= true*/){
     if(nodes[node1_id] > nodes[node2_id]){
         swap(node1_id, node2_id);

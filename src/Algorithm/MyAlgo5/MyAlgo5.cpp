@@ -1,11 +1,11 @@
 #include "MyAlgo5.h"
 
-MyAlgo5::MyAlgo5(string filename, int request_time_limit, int node_time_limit, double swap_prob, double entangle_alpha)
-    :AlgorithmBase(filename, "MyAlgo5", request_time_limit, node_time_limit, swap_prob, entangle_alpha , true /*let it be alway true*/){
+MyAlgo5::MyAlgo5(string filename, int request_time_limit, int node_time_limit, double swap_prob, double entangle_alpha , int path_num)
+    :AlgorithmBase(filename, "MyAlgo5", request_time_limit, node_time_limit, swap_prob, entangle_alpha , true /*let it be alway true*/),path_num(path_num){
     if(DEBUG) cerr<<"new MyAlgo5"<<endl;
 }
-MyAlgo5::MyAlgo5(string filename, int request_time_limit, int node_time_limit, double swap_prob, double entangle_alpha, double epsilon)
-    :AlgorithmBase(filename, "MyAlgo5_" + to_string(epsilon) , request_time_limit, node_time_limit, swap_prob, entangle_alpha , true /*let it be alway true*/), epsilon(epsilon){
+MyAlgo5::MyAlgo5(string filename, int request_time_limit, int node_time_limit, double swap_prob, double entangle_alpha, double epsilon ,int path_num)
+    :AlgorithmBase(filename, "MyAlgo5_" + to_string(epsilon) , request_time_limit, node_time_limit, swap_prob, entangle_alpha , true /*let it be alway true*/), epsilon(epsilon), path_num(path_num){
     if(DEBUG) cerr<<"new MyAlgo5"<<endl;
 }
 
@@ -33,7 +33,7 @@ void MyAlgo5::next_time_slot(){
 double MyAlgo5::X(int u, int v, int i){
 	double weight = alpha[u] + alpha[v] + beta[{u, v}];
 	if(requests[i].get_source() == u || requests[i].get_source() == v){
-		weight += tau[i];
+		weight += tau[i]/requests[i].get_send_demand();
 	}
 	return weight;
 }
@@ -53,7 +53,7 @@ void MyAlgo5::yen(int src,int dst,int K,int req_no){
         copy_graph.push_back(graph.get_neighbors_id(i));  
     }
 
-    all_given_path[req_no].push_back(Dijkstra(copy_graph,src,dst,req_no,rootpath));                 //get the first path
+    all_given_path[req_no].push_back(Dijkstra(copy_graph,src,dst,rootpath));                        //get the first path
     /*
     cout<<"[First path]";
     for(auto it:all_given_path[req_no][0]){
@@ -63,10 +63,10 @@ void MyAlgo5::yen(int src,int dst,int K,int req_no){
     */
     for(int k = 1 ;k < K ;k++ ){                                                                    //find k path
         //cout<<"Noe finding the "<< k <<"path............."<<endl;
-        for(int i = 0; i <= (int)(all_given_path[req_no][k - 1].size()) - 2 ; i++){                 //spurnode index     
+        for(unsigned int i = 0; i <= (all_given_path[req_no][k - 1].size()) - 2 ; i++){                 //spurnode index     
             //cout<<"[i]:"<<i<<" [all_given.size]"<<"["<<k<<"]"<<all_given_path[req_no][k-1].size()<<endl;
             spurnode = all_given_path[req_no][k - 1][i];
-            for(int j = 0; j <= i; j++){
+            for(unsigned int j = 0; j <= i; j++){
                 rootpath.push_back(all_given_path[req_no][k-1][j]);                                 //rootpath done
             }
                 
@@ -96,7 +96,7 @@ void MyAlgo5::yen(int src,int dst,int K,int req_no){
                     
                 }      
             }
-            spurpath = Dijkstra(copy_graph,spurnode, dst, req_no, rootpath);                         //rootpathnodes are banned 
+            spurpath = Dijkstra(copy_graph,spurnode, dst, rootpath);                         //rootpathnodes are banned 
             totalpath=rootpath;                                                                     //totalpath = rootpath + spurpath
             totalpath.pop_back();
             rootpath.clear();
@@ -213,7 +213,7 @@ void MyAlgo5::initialize(){                                               //Main
     }
 }
 
-vector<int> MyAlgo5::Dijkstra(vector<vector<int>>&copy_graph, int src, int dst, int req_no, vector<int>&get_delete){ 
+vector<int> MyAlgo5::Dijkstra(vector<vector<int>>&copy_graph, int src, int dst, vector<int>&get_delete){ 
     const double INF = numeric_limits<double>::infinity();
     int n = copy_graph.size();
     vector<double> distance(n, INF);
@@ -223,8 +223,9 @@ vector<int> MyAlgo5::Dijkstra(vector<vector<int>>&copy_graph, int src, int dst, 
     
     distance[src] = 0;
     pq.push({0, src});
-    
+    //cout<<"Dijkstra start>>>>>>>>>>>>>>."<<endl;
     while(!pq.empty()) {
+        
         int cur_node = pq.top().second;
         pq.pop();
         if(used[cur_node]) continue;
@@ -232,7 +233,7 @@ vector<int> MyAlgo5::Dijkstra(vector<vector<int>>&copy_graph, int src, int dst, 
         for(auto neighbor : copy_graph[cur_node]){
             bool jump_out = false;
             for(unsigned int i = 0; i < get_delete.size(); i++){
-                if(neighbor == get_delete[i] && i != get_delete.back()){
+                if(neighbor == get_delete[i] && i != (unsigned int)get_delete.back()){
                     jump_out = true;
                 }
             }
@@ -257,35 +258,37 @@ vector<int> MyAlgo5::Dijkstra(vector<vector<int>>&copy_graph, int src, int dst, 
         path.push_back(cur_node);
         cur_node = parent[cur_node];
     }
+    //cout<<"Dijkstra end>>>>>>>>>>>>>>."<<endl;
     reverse(path.begin(), path.end());
     return path;
     
 }       
    
-vector<int> MyAlgo5::SepDijkstra(int src, int dst, int req_no, vector<vector<double>> &path_graph_X){ 
-
-    
-    vector<vector<double>> transpose_graph(qubit_num * path_num + 2, vector<double>(qubit_num * path_num  + 2));
-    for (int i = 0; i < qubit_num * path_num + 2; i++)
-        for (int j = 0; j < qubit_num * path_num + 2; j++)
+vector<int> MyAlgo5::SepDijkstra(int dst, int req_no, vector<vector<double>> &path_graph_X){ 
+    vector<vector<double>> transpose_graph(requests[req_no].get_send_demand() * path_num + 2, vector<double>(requests[req_no].get_send_demand() * path_num  + 2));
+    for (int i = 0; i < requests[req_no].get_send_demand() * path_num + 2; i++){
+        for (int j = 0; j < requests[req_no].get_send_demand() * path_num + 2; j++){
             transpose_graph[i][j] = path_graph_X[j][i];
-    
-
+            //cout<<transpose_graph[i][j]<<"*";
+        }
+        //cout<<endl;
+    }
 
     const double INF = numeric_limits<double>::infinity();
-    vector<double> distance(qubit_num * path_num + 2, INF);
-    vector<int> parent(qubit_num * path_num + 2, -1);
-    vector<bool> used(qubit_num * path_num + 2, false);
+    vector<double> distance(requests[req_no].get_send_demand() * path_num + 2, INF);
+    vector<int> parent(requests[req_no].get_send_demand() * path_num + 2, -1);
+    vector<bool> used(requests[req_no].get_send_demand() * path_num + 2, false);
     priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> pq;
 
     distance[dst] = 0;
     pq.push({0, dst});
+    //cout<<"sepDijkstra start>>>>>>>>>>>>>>."<<endl;
     while(!pq.empty()) {
         int cur_node = pq.top().second;
         pq.pop();
         if(used[cur_node]) continue;
         used[cur_node] = true;
-        for(int i=0; i < qubit_num * path_num + 2;i++) {
+        for(int i=0; i < requests[req_no].get_send_demand() * path_num + 2;i++) {
             if(transpose_graph[cur_node][i]!= -1){
                 if(distance[cur_node] + transpose_graph[cur_node][i] < distance[i]) {
                     distance[i] = distance[cur_node] + transpose_graph[cur_node][i];
@@ -297,6 +300,7 @@ vector<int> MyAlgo5::SepDijkstra(int src, int dst, int req_no, vector<vector<dou
 
         }
     }
+    //cout<<"sepDijkstra end>>>>>>>>>>>>>>."<<endl;
     if(distance[dst] >= INF) return{};
     return parent;
 }     
@@ -305,16 +309,22 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
    
     vector<int> SPT;                  //nodes' parent in the spanning tree
     vector<int> best_set;
-    
     double best_len; 
     int src = 0;
-    int dst = path_num * qubit_num + 1;
-
-    SPT = SepDijkstra(src, dst, req_no, path_graph_X[req_no]);         //the first SPT is get by dijkstra
-
+    int dst = path_num * requests[req_no].get_send_demand() + 1;
+    //cout<<"SepDijkstra start"<<endl;
+    SPT = SepDijkstra(dst, req_no, path_graph_X[req_no]);         //the first SPT is get by dijkstra
+    
+    // cout<<"[SPT]";
+    // for(auto it:SPT){
+    //     cout<<it<<" ";
+    // }
+    // cout<<endl;
+    
     int cur_node = src;                                     //counting the first path's U(X,Y)=c* e^r
     double c = 0;                                           //c = SUM[u,v]:alpha(u)+alpha(v)+beta(u,v)==X[u,v]
     double r = 0;                                           //r = SUM[u,v]:-ln(Pr(u,v))==Y[u,v]
+    //cout<<"separation [1] start>>>>>>>>>>>>>>."<<endl;
     while(cur_node != dst){
         // if(cur_node < SPT[cur_node]){                       //[can alter]no need if else
         //     c += X[{cur_node,SPT[cur_node]}][req_no];               
@@ -329,8 +339,9 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
         best_set.push_back(cur_node);
         cur_node = SPT[cur_node];
     } 
+    //cout<<"separation [1] end>>>>>>>>>>>>>>."<<endl;
     best_set.push_back(dst);
-    best_len = c * exp(r);
+    best_len = c * exp(r) / requests[req_no].get_value();
     //cout<<"[best_len]"<<best_len<<endl;
     req_Us = best_len;
 
@@ -343,7 +354,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
     map<pair<int, int>, bool> used_edge;
     vector<int> new_path;   
     pair<int,int> new_edge;
-
+    
     for(unsigned int i = 0; i < SPT.size(); i++){
         int cur_node = i;
         while(cur_node != dst){
@@ -355,11 +366,11 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             cur_node = SPT[cur_node];
         }
     }
-
+    //cout<<"separationing [2] start............"<<endl;
     while(1){
         double minimum = numeric_limits<double>::infinity();
-        for(int i = 0; i < path_num * qubit_num + 2; i++){                 //creating many new SPT
-            for(int j = i + 1; j < path_num * qubit_num + 2; j++){
+        for(int i = 0; i < path_num * requests[req_no].get_send_demand() + 2; i++){                 //creating many new SPT
+            for(int j = i + 1; j < path_num * requests[req_no].get_send_demand() + 2; j++){
                 double temp1 = 0, temp2 = 0;
                 if(path_graph_X[req_no][i][j] != -1){
                     if(SPT[i] == j){      // checking used edge or unused
@@ -381,6 +392,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
                             cur_node = SPT[cur_node];
                         }
                         if(temp2 < 0 && temp1 > 0) {
+                            
                             /*
                             if(used_edge.find({i,j}) != used_edge.end()){
                                 continue;
@@ -397,7 +409,6 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             }
         }        // 找到最小的 edge 
         
-
         if(minimum == numeric_limits<double>::infinity()){   //原本設計是有break,但之後用不到
             break;
         }else{
@@ -421,7 +432,7 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             c += path_graph_X[req_no][new_path[i]][new_path[i+1]];
             r += path_graph_Y[req_no][new_path[i]][new_path[i+1]];
         }
-        new_len =  c * exp(r);
+        new_len =  c * exp(r) / requests[req_no].get_value();
         //cout<<"[new_len]"<<new_len<<endl;
         if(new_len < best_len){
             best_len = new_len;
@@ -429,11 +440,12 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
             best_set = new_path;                                            //路線修改,新的spt產生
         } 
     }    
-
+    //cout<<"separationing [2] end............"<<endl;
     return best_set;                                                  
 }
 
 void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
+
     double min_s_u = numeric_limits<double>::infinity();
     double min_s_uv = numeric_limits<double>::infinity();
     double s_i = 1;                             //request[no] min
@@ -450,37 +462,38 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
     }
     for(auto &it:s_uv){
         it.resize(graph.get_size() + 5);
-    }
-                                                   
+    }            
+                                 
 /*
     for(unsigned int i = 1; i < set.size()-1; i++){
         cout<<"[Real Path]:";
-        for(unsigned int j = 0; j < all_given_path[req_no][set[i]%path_num-1].size(); j++){
-            cout<<all_given_path[req_no][set[i]%path_num-1][j]<<" ";
+        for(unsigned int j = 0; j < all_given_path[req_no][(set[i]-1)%path_num].size(); j++){
+            cout<<all_given_path[req_no][(set[i]-1)%path_num][j]<<" ";
         }
         cout<<endl;
     }
 */
     // We should calculate every node's memory usage
     for(unsigned int i = 1; i < set.size()-1; i++){
-        for(unsigned int j = 0; j < all_given_path[req_no][set[i]%path_num-1].size(); j++){
-            if(j == 0 || j == all_given_path[req_no][set[i]%path_num-1].size() - 1){
-                memory_use[all_given_path[req_no][set[i]%path_num-1][j]] += 1;            
+        for(unsigned int j = 0; j < all_given_path[req_no][(set[i]-1)%path_num].size(); j++){
+            if(j == 0 || j == all_given_path[req_no][(set[i]-1)%path_num].size() - 1){
+                memory_use[all_given_path[req_no][(set[i]-1)%path_num][j]] += 1;            
             }
             else{
-                memory_use[all_given_path[req_no][set[i]%path_num-1][j]] += 2;
+                memory_use[all_given_path[req_no][(set[i]-1)%path_num][j]] += 2;
             }
         }
 
-        for(unsigned int j = 0; j < all_given_path[req_no][set[i]%path_num-1].size() - 1; j++){
-            if(all_given_path[req_no][set[i]%path_num-1][j] < all_given_path[req_no][set[i]%path_num-1][j+1]){
-                channel_use[all_given_path[req_no][set[i]%path_num-1][j]][all_given_path[req_no][set[i]%path_num-1][j+1]]++;
+        for(unsigned int j = 0; j < all_given_path[req_no][(set[i]-1)%path_num].size() - 1; j++){
+            if(all_given_path[req_no][(set[i]-1)%path_num][j] < all_given_path[req_no][(set[i]-1)%path_num][j+1]){
+                channel_use[all_given_path[req_no][(set[i]-1)%path_num][j]][all_given_path[req_no][(set[i]-1)%path_num][j+1]]++;
             }
             else{
-                channel_use[all_given_path[req_no][set[i]%path_num-1][j+1]][all_given_path[req_no][set[i]%path_num-1][j]]++;
+                channel_use[all_given_path[req_no][(set[i]-1)%path_num][j+1]][all_given_path[req_no][(set[i]-1)%path_num][j]]++;
             }
         }
     }
+
 /*
     for(auto it:memory_use){
         cout<<it<<" ";
@@ -507,13 +520,14 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
             }
         }
     }
-    /*
-    cout<<"[set]";
-    for(auto it:set){
-        cout<<it<<" ";
-    }
-    cout<<endl;
-    */
+
+    // cout<<"[set]";
+    // for(auto it:set){
+    //     cout<<it<<" ";
+    // }
+    // cout<<endl;
+
+
     int rate = 1;
     double s = min(min_s_u, min(min_s_uv, s_i));
     for(int i = 0; i < rate; i++){
@@ -550,6 +564,7 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
         obj += (tau[req_no] * (1 +epsilon * s) - tau[req_no]);
         tau[req_no] = tau[req_no] * (1 + epsilon * s);
     }
+
 }
 
 double MyAlgo5::changing_obj(){
@@ -612,15 +627,17 @@ void MyAlgo5::find_violate(){
     double cur_magni;
 
     for(auto it : used_request){
-        int src = it.first.first;
-        int dst = it.first.second;
-        int req_no = -1;
-        for(unsigned int i = 0; i < requests.size();i ++){
-            if(requests[i].get_source() == src && requests[i].get_destination() == dst){
-                req_no = i;
-                break;
-            }
-        }
+
+        // int src = it.first.first;
+        // int dst = it.first.second;
+        // int req_no;
+        // for(unsigned int i = 0; i < requests.size();i ++){
+        //     if(requests[i].get_source() == src && requests[i].get_destination() == dst){
+        //         req_no = i;
+        //         break;
+        //     }
+        // }
+
         cur_magni = it.second / 1;
         if(cur_magni > max_magni){
             max_magni = cur_magni;
@@ -672,10 +689,10 @@ void MyAlgo5::check_enough(vector<map<vector<int>, int>> &path){
     vector<int> over_memory(graph.get_size());
     map<vector<int>,int> over_channel;
     map<vector<int>,int>::iterator iter;
-    for(int i = 0; i <(int)path.size(); i++){
+    for(unsigned int i = 0; i <path.size(); i++){
         for(auto it : path[i]){
             vector<int> cur_set = it.first;
-            for(int j = 0; j < (int)cur_set.size() - 1; j++){
+            for(unsigned int j = 0; j < cur_set.size() - 1; j++){
                 memory_used[cur_set[j]] += it.second;
                 memory_used[cur_set[j+1]] += it.second;
                 iter = channel_used.find({cur_set[j],cur_set[j+1]});
@@ -714,9 +731,10 @@ void MyAlgo5::check_enough(vector<map<vector<int>, int>> &path){
     }
 
     bool flag;
+    // cout<<"Check Start>>>>>>>>>>>>>>>>>>>>>>>"<<endl;
     while(1){
         flag = true;
-        for(int i = 0; i < (int)over_memory.size(); i++){
+        for(unsigned int i = 0; i < over_memory.size(); i++){
             if(over_memory[i] > 0){
                 flag = false;
             }
@@ -738,14 +756,14 @@ void MyAlgo5::check_enough(vector<map<vector<int>, int>> &path){
             //         requests[i].add_cur(it.second);
             //     }
             // }
-            cout<<"--------------Reduece finish-------------\n";
+            //cout<<"--------------Reduece finish-------------\n";
             readd(path,over_memory,over_channel);  
             break;
         }
-        int long_len = 0;
+        unsigned int long_len = 0;
         int long_req = -1;
         vector<int> long_path;
-        for(int i = 0; i < (int)path.size(); i++){
+        for(unsigned int i = 0; i < path.size(); i++){
             for(auto it : path[i]){
                 int associate_flag=false;
                 /*
@@ -754,7 +772,7 @@ void MyAlgo5::check_enough(vector<map<vector<int>, int>> &path){
                 }
                 cout<<"-----------"<<endl;
                 */
-                for(int j=0;j<(int)it.first.size()-1;j++){
+                for(unsigned int j=0;j<it.first.size()-1;j++){
 
                     //cout<<"memory check:"<<j<<"||"<<over_memory[it.first[j]]<<endl;
                     if(over_memory[it.first[j]]>0){
@@ -773,14 +791,14 @@ void MyAlgo5::check_enough(vector<map<vector<int>, int>> &path){
                     associate_flag=true;
                 }
 
-                if(associate_flag==true && (int)it.first.size() > long_len && it.second > 0){
+                if(associate_flag==true && it.first.size() > long_len && it.second > 0){
                     long_len = it.first.size();
                     long_path = it.first;
                     long_req = i;
                 }
             }
         }
-        for(int i = 0; i < (int)long_path.size() - 1; i++){
+        for(unsigned int i = 0; i < long_path.size() - 1; i++){
             over_memory[long_path[i]]--;
             over_memory[long_path[i+1]]--;
             over_channel[{long_path[i], long_path[i+1]}]--;
@@ -788,6 +806,7 @@ void MyAlgo5::check_enough(vector<map<vector<int>, int>> &path){
         }
         path[long_req][long_path]--;
     }  
+    //cout<<"Check end>>>>>>>>>>>>>>>>>>>>>>>"<<endl;
 }  
 
 void MyAlgo5::readd(vector<map<vector<int>, int>> &path,vector<int> &over_memory,map<vector<int>,int> &over_channel){
@@ -816,6 +835,7 @@ void MyAlgo5::readd(vector<map<vector<int>, int>> &path,vector<int> &over_memory
         }
     }
     bool flag = true;
+
     while(flag){
         flag = false;
         for(unsigned int i = 0; i < re.size(); i++){
@@ -847,7 +867,7 @@ void MyAlgo5::readd(vector<map<vector<int>, int>> &path,vector<int> &over_memory
                             path[re[i].second][it.first] += 1;
                             cout << "!!PATH +++" << endl;
                             flag = true;
-                            for(int j = 0; j < (int)each_path.size() - 1; j++){
+                            for(unsigned int j = 0; j < each_path.size() - 1; j++){
                                 over_memory[each_path[j]]++;
                                 over_memory[each_path[j+1]]++;
                                 over_channel[{each_path[j], each_path[j+1]}]++;
@@ -916,92 +936,144 @@ void MyAlgo5::calculate(){
 }
 
 vector<map<vector<int>, int>> MyAlgo5::Greedy_rounding(){
-    vector<map<vector<int>, double>> each_request(requests.size());
+    vector< tuple<double, int, vector<int>> > fractional_xis(requests.size());
     vector<map<vector<int>, int>> I_request(requests.size());
-    for(auto it : x_i_p){
-        vector<int> path = it.first;
-        int src = path[0];
-        int dst = path.back();
-        for(unsigned int i = 0; i < requests.size(); i++){
-            if(src == requests[i].get_source() && dst == requests[i].get_destination()){
-                each_request[i][path] = it.second;
+    for(unsigned int i = 0; i < x_i_s.size(); i++){
+        double max=-1;
+        vector<int> max_vector;
+        for(auto it2 : x_i_s[i]){
+            if(it2.second >= max){
+                max = it2.second;
+                max_vector=it2.first;
+            }
+        }
+        fractional_xis[i]=tie(max , i, max_vector);
+    }
+    for(auto it:fractional_xis){
+		double prob;
+        vector<int> set;
+		int request_id;
+		tie(prob, request_id, set) = it;
+        /*
+        cout<<"id:"<<request_id<<" prob:"<<prob<<"------";
+        for(auto it2:set){
+            cout<<it2<<" ";
+        }  
+        cout<<endl;
+        */
+    }
+	// 對 x^i_p 由小到大排序
+	sort(fractional_xis.begin(), fractional_xis.end());
+	reverse(fractional_xis.begin(), fractional_xis.end());
+
+	// 如果資源足夠讓 x 變成 1 ，就直接讓 x 變成 1 
+	for(auto it:fractional_xis){
+		double prob;
+        vector<int> set;
+		int request_id;
+		tie(prob, request_id, set) = it;
+        if(set.size()<=2){
+            break;
+        }
+        vector<int> memory_use(graph.get_size() + 5, 0);
+        vector<vector<int>> channel_use;
+        channel_use.resize(graph.get_size() + 5);
+        for(auto &it2:channel_use){
+            it2.resize(graph.get_size() + 5);
+        }   
+        for(unsigned int i = 1; i < set.size()-1; i++){
+            for(unsigned int j = 0; j < all_given_path[request_id][(set[i]-1)%path_num].size(); j++){
+                if(j == 0 || j == all_given_path[request_id][(set[i]-1)%path_num].size() - 1){
+                    memory_use[all_given_path[request_id][(set[i]-1)%path_num][j]] += 1;            
+                }
+                else{
+                    memory_use[all_given_path[request_id][(set[i]-1)%path_num][j]] += 2;
+                }
+            }
+
+            for(unsigned int j = 0; j < all_given_path[request_id][(set[i]-1)%path_num].size() - 1; j++){
+                if(all_given_path[request_id][(set[i]-1)%path_num][j] < all_given_path[request_id][(set[i]-1)%path_num][j+1]){
+                    channel_use[all_given_path[request_id][(set[i]-1)%path_num][j]][all_given_path[request_id][(set[i]-1)%path_num][j+1]]++;
+                }
+                else{
+                    channel_use[all_given_path[request_id][(set[i]-1)%path_num][j+1]][all_given_path[request_id][(set[i]-1)%path_num][j]]++;
+                }
+            }
+        }
+
+        //is_assinable get_remain
+        bool enough=true;
+        for(int i = 0; i < graph.get_size(); i++){
+            if(graph.Node_id2ptr(i)->get_remain() < memory_use[i]){
+                enough = false;
                 break;
             }
         }
-    }
-
-    for(unsigned int i = 0; i < each_request.size(); i++){
-        for(auto it:each_request[i]){
-            vector<int>undistri_path =it.first;
+        for(int i = 0; i < graph.get_size(); i++){
+            for(int j = i + 1; j < graph.get_size(); j++){
+                if(graph.remain_channel(i,j) < channel_use[i][j]){
+                    enough = false;
+                    break;
+                }
+            }
+            if(!enough){
+                break;
+            }
         }
-    }
-	vector<int> used_I(requests.size());										//第 i 個 request 目前用了幾調 path
-	vector< tuple<double, int, vector<int>> > fractional_xip;	
-    for(unsigned int i = 0; i < requests.size(); i++){
-        used_I[i] = 0;
-		for(auto it : each_request[i]){                    
-            double frac_prob;
-
-            int i_prob = it.second;                                             //每個path先取整數部分=>確定分配
-            I_request[i][it.first] = i_prob;
-            used_I[i] += i_prob;
-			assign_resource(it.first, i_prob, i);
-            frac_prob = it.second - i_prob;                                     //total_prob代表random區間,丟進accumulate
-			fractional_xip.emplace_back(frac_prob*graph.find_success_probability(it.first), i, it.first);
-        }                                                   //unused_I=取底[ri - sum(request.I) - (unused.I)]
-    }
-
-	// 對 x^i_p 由小到大排序
-	sort(fractional_xip.begin(), fractional_xip.end());
-	reverse(fractional_xip.begin(), fractional_xip.end());
-
-	// 如果資源足夠讓 x 變成 1 ，就直接讓 x 變成 1 
-	for(auto it:fractional_xip){
-		vector<int> extra_path;
-		double x_prob;
-		int request_id;
-		tie(x_prob, request_id, extra_path) = it;
-		if(find_width(extra_path) >= 1 && used_I[request_id] < requests[request_id].get_send_demand()){
-			assign_resource(extra_path, 1, request_id);
-			used_I[request_id] += 1;
-            I_request[request_id][extra_path]++;
-		}
+        if(enough){
+            for(unsigned int i = 1; i < set.size() - 1; i++){
+                assign_resource(all_given_path[request_id][set[i] % path_num - 1], 1, request_id);
+                I_request[request_id][all_given_path[request_id][set[i] % path_num - 1]]=1;
+            }
+        }
 	}
 	// 如果還有剩下資源的話，盡量塞爆
-	for(auto it:fractional_xip){
-		vector<int> extra_path;
+	for(auto it:fractional_xis){
+		vector<int> set;
 		double x_prob;
 		int request_id;
-		tie(x_prob, request_id, extra_path) = it;
-		int width = 0;
-		int extra_send_limit = requests[request_id].get_send_demand() - used_I[request_id];
-		width = min(find_width(extra_path), extra_send_limit);
-		if(width >= 1){
-			assign_resource(extra_path, width, request_id);
-            used_I[request_id] += width;
-			I_request[request_id][extra_path]++;
-		}
+		tie(x_prob, request_id, set) = it;
+        if(set.size()<=2){
+            break;
+        }
+        for(unsigned int i = 1; i < set.size()-1 ; i++){
+            vector<int> extra_path = all_given_path[request_id][set[i] % path_num - 1];
+            int width = find_width(extra_path);
+            if(width >= 1){
+                assign_resource(extra_path, width, request_id);
+                I_request[request_id][extra_path]+=width;
+            }
+        }
 	}
-	for(int request_id=0;request_id<(int)requests.size();request_id++){
+    //cout<<"fucking start>>>>>>>>>>>>>>."<<endl;
+    while(1){
+        bool keep_run=false;
+	    for(unsigned int request_id=0;request_id<requests.size();request_id++){
 		// cerr<<"GG: It work?"<<endl;
-		while(requests[request_id].get_send_demand() - used_I[request_id] > 0){
 			vector<int> extra_path = BFS(requests[request_id].get_source(), requests[request_id].get_destination());
 			int width = 0;
 			if(extra_path.size() != 0){
-				width = min(find_width(extra_path), requests[request_id].get_send_demand() - used_I[request_id]);
+				width =find_width(extra_path);
 				assign_resource(extra_path, width, request_id);
-				used_I[request_id] += width;
-			}
-			if(width == 0){
-				break;
+				if(I_request[request_id].find(extra_path)!=I_request[request_id].end()){
+                    I_request[request_id][extra_path] += width;
+                }
+                else{
+                    I_request[request_id][extra_path] = width;
+                }
+                keep_run=true;
 			}
 		}
+        if(!keep_run){
+            break;
+        }
 	}
+    //cout<<"fucking end>>>>>>>>>>>>>>."<<endl;
     return I_request;
 
 }
 
-void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vector<vector<vector<double>>> &path_graph_Y, vector<vector<double>> &X_value, vector<vector<double>> & Y_value)
+void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vector<vector<vector<double>>> &path_graph_Y, vector<vector<double>> &X_value, vector<vector<double>> & Y_value,bool print)
 {
     // We need to build direct graph
     // [0] represent source node
@@ -1020,79 +1092,90 @@ void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vec
             Y_value[i][j] = r;
         }
 
-    
-
-        for(int j = 0; j < path_num - qubit_num + 1; j++){
+        for(int j = 0; j < path_num - requests[i].get_send_demand() + 1; j++){
             path_graph_X[i][0][j+1] = X_value[i][j];
             path_graph_Y[i][0][j+1] = Y_value[i][j];
         }
-
-        for(int j = 0; j < qubit_num - 1; j++){
+ 
+        for(int j = 0; j < requests[i].get_send_demand() - 1; j++){
+   
             for(int k = 0; k < path_num; k++){
-                if((path_num - k) - (qubit_num - j) < 0) continue;
+         
+                if((path_num - k) - (requests[i].get_send_demand() - j) < 0) continue;
                 for(int l = k + 1; l < path_num; l++){
-                    if((path_num - l) - (qubit_num - 1 - j) < 0) continue;
+                    if((path_num - l) - (requests[i].get_send_demand() - 1 - j) < 0) continue;
                     path_graph_X[i][j * path_num + k + 1][(j + 1) * path_num + l + 1] = X_value[i][l];
                     path_graph_Y[i][j * path_num + k + 1][(j + 1) * path_num + l + 1] = Y_value[i][l];
                 }
             }
         }   
-
-
+     
         for(int j = 0; j < path_num; j++){
-            path_graph_X[i][path_num * (qubit_num - 1) + j + 1][path_num * qubit_num + 1] = 0;
-            path_graph_Y[i][path_num * (qubit_num - 1) + j + 1][path_num * qubit_num + 1] = 1;
+      
+            path_graph_X[i][path_num * (requests[i].get_send_demand() - 1) + j + 1][path_num * requests[i].get_send_demand() + 1] = 0;
+            path_graph_Y[i][path_num * (requests[i].get_send_demand() - 1) + j + 1][path_num * requests[i].get_send_demand() + 1] = 1;
         }
        
     }
-/*
-     for(unsigned int i = 0; i < requests.size(); i++ ){
-         for(int j = 0; j < path_num * qubit_num + 2; j++){
-             for(int k = 0; k < path_num * qubit_num + 2; k++){
-                 
-                 if(path_graph_X[i][j][k] != -1){
-                     cout << "1";
-                 }else{
-                     cout << 0;
-                 }
-                 
-                 //cout << setprecision(2) << path_graph_X[i][j][k] << " ";
-             }
-             cout << endl;
-         }
-         cout << "---------" << endl;
-     }
-*/
+
+    if(print){
+        for(unsigned int i = 0; i < requests.size(); i++ ){
+            for(int j = 0; j < path_num * requests[i].get_send_demand() + 2; j++){
+                for(int k = 0; k < path_num * requests[i].get_send_demand() + 2; k++){
+                    /*
+                    if(path_graph_X[i][j][k] != -1){
+                        cout << "1";
+                    }else{
+                        cout << 0;
+                    }
+                    */
+                    cout << setprecision(2) << path_graph_X[i][j][k]<<"*";
+                }
+                cout << endl;
+            }
+            cout << "---------------------------------------------" << endl;
+        }
+    }
 }
 
 void MyAlgo5::path_assignment(){
-
-    all_given_path.resize(requests.size());
-    x_i_s.resize(requests.size());
-    for(unsigned int i = 0; i < requests.size(); i++){
-        cout<<"[request]:"<<i<<endl;
-        yen(requests[i].get_source(),requests[i].get_destination(),10,i);
+    //cout<<"Start>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+    all_given_path.resize(requests.size());                                             //all_path[request_size]
+    x_i_s.resize(requests.size());                                                      //for answer_set[request_size]
+    for(unsigned int i = 0; i < requests.size(); i++){                                  //find route
+        yen(requests[i].get_source(),requests[i].get_destination(),path_num,i);          
     }
 
-    
+    //show given path
+    for(auto it:all_given_path){
+        cout<<"Next Request -----------"<<endl;
+        for(auto it2:it){
+            cout<<"[Path]";
+            for(auto it3:it2){
+                cout<<it3<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
+    }
+
 
     initialize();
-    
-        cout<<"[alpha]";
-        for(auto it:alpha){
-            cout<<it<<" ";
-        }
-        cout<<"[alpha end]"<<endl;
-    vector<vector<vector<double>>> path_graph_X(requests.size(), vector<vector<double>>(10 * qubit_num + 2, vector<double>(10 * qubit_num + 2,-1)));
-    vector<vector<vector<double>>> path_graph_Y(requests.size(), vector<vector<double>>(10 * qubit_num + 2, vector<double>(10 * qubit_num + 2,-1)));
+    vector<vector<vector<double>>> path_graph_X;
+    vector<vector<vector<double>>> path_graph_Y;
     vector<vector<double>> X_value(requests.size(), vector<double>(path_num));
     vector<vector<double>> Y_value(requests.size(), vector<double>(path_num));
-    create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value);
-
+    for(unsigned int i = 0; i<requests.size(); i++){
+        vector<vector<double>> temp(path_num * requests[i].get_send_demand() + 2, vector<double>(path_num * requests[i].get_send_demand() + 2,-1));
+        path_graph_X.push_back(temp);
+        path_graph_Y.push_back(temp);
+    }
+    create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value,true);
+    //cout<<"while start>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
     obj = M * delta;
     vector<int> best_set;
     vector<int> cur_set;
-    
+
     while(obj < 1){
         int req_no = 0;
         double smallest_U = numeric_limits<double>::infinity();
@@ -1100,21 +1183,21 @@ void MyAlgo5::path_assignment(){
         vector<vector<int>>all_path_set;
         all_path_set.resize(requests.size());
         U.resize(requests.size());
-        // cout<<"\n------New round-------\n";
+        //cout<<"\n------New round-------\n";
         //#pragma omp parallel for
         for(unsigned int i = 0; i < requests.size(); i++){
             all_path_set[i] =  separation_oracle(i, U[i], path_graph_X, path_graph_Y);
-            //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
+            //cout << "smallest_U: " << smallest_U << " U: " << U[i] << "\n\n"; 
         }
-        /*
-        for(auto it:all_path_set){
-            cout<<"[SET]";
-            for(auto it2:it){
-                cout<<it2<<" ";
-            }
-            cout<<endl;
-        }
-        */
+        
+        // for(auto it:all_path_set){
+        //     cout<<"[SET]";
+        //     for(auto it2:it){
+        //         cout<<it2<<" ";
+        //     }
+        //     cout<<endl;
+        // }
+
         for(unsigned int i = 0; i < requests.size(); i++){
             //cout << "smallest_U: " << smallest_U << " U: " << U << "\n\n"; 
             if(U[i] < smallest_U){
@@ -1123,18 +1206,39 @@ void MyAlgo5::path_assignment(){
                 req_no = i;
             }
         } 
-        cout <<"smallest req_no:"<<req_no<<" with " << smallest_U << endl;
+        //cout <<"smallest req_no:"<<req_no<<" with " << smallest_U << endl;
         
         find_bottleneck(best_set, req_no);
-        create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value);
-
-        //cout << obj << endl;
+        //cout<<"finsih find_fbottle_neck"<<endl;
+        create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value,false);
+        //cout<<"finsih create_path"<<endl;
+        //cout <<"obj:"<< obj << endl;
         // obj = changing_obj();
         // cout<<"changing_obj obj: " << obj << endl ;
     }
+    //cout<<"While_finsihed>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+    calculate();
 
-    //calculate();
+    cout<<"BEFORE VIOLATE>>>>>>>>>>>>>"<<endl;
+    for(auto it:x_i_p){
+        for(auto it2:it.first){
+            cout<<it2<<" ";
+        }
+        cout<<" with "<<it.second<<endl;
+    }
+    cout<<"SET"<<endl;
+    for(auto it:x_i_s){
+        for(auto it2:it){
+            for(auto it3:it2.first){
+                cout<<it3<<" ";
+            }
+            cout<<" contain "<<it2.second<<endl;
+        }
+    }
+  
     find_violate();
+    //cout<<"find_violate finished>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+
     cout<<"AFTER VIOLATE>>>>>>>>>>>>>"<<endl;
     for(auto it:x_i_p){
         for(auto it2:it.first){
@@ -1142,6 +1246,7 @@ void MyAlgo5::path_assignment(){
         }
         cout<<" with "<<it.second<<endl;
     }
+    cout<<"SET"<<endl;
     for(auto it:x_i_s){
         for(auto it2:it){
             for(auto it3:it2.first){
@@ -1151,10 +1256,11 @@ void MyAlgo5::path_assignment(){
         }
     }
 
-    //vector<map<vector<int>, int>>path = Greedy_rounding();
-
+    vector<map<vector<int>, int>>path = Greedy_rounding();
+    //cout<<"greedy finished>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
     res["change_edge_num"] = change_edge_num;
     res["diff_edge_num"] = diff_num;
-    
+
+
 }   
 

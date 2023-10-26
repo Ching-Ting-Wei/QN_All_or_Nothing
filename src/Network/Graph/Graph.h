@@ -49,6 +49,7 @@ public:
     void release();
     void set_weight(int node1_id, int node2_id, double value);
     int remain_resource_cnt(int node1_id, int node2_id, bool is1_repeater = true, bool is2_repeater = true); // the resource width between node1 and node2
+    int remain_channel(int node1_id,int node2_id); 
     Path *build_path(vector<int> nodes_id);
     
 };

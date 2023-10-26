@@ -19,6 +19,7 @@ protected:
     int source, destination;
     int time_limit;
     int send_demand;
+    int value;
     int cur_send = 0;
     int throughput = 0;
     int status;
@@ -32,7 +33,7 @@ protected:
     vector<double>before_ent_path_prob_vt;
 public:
     Request(int source, int destination, const int& time_limit);
-    Request(int source, int destination, const int& time_limit, int send_demand);
+    Request(int source, int destination, const int& time_limit, int send_demand, int value);
     ~Request(void);
     void set_path(int path_id, Path *p);                        //should delete old path before set new path
     int get_time_limit();
@@ -42,6 +43,7 @@ public:
     int get_throughput();
     int get_send_path_length();
     int get_send_demand();
+    int get_value();
     int get_path_num();
     int get_before_ent_path_num();
     int get_cur_send();
