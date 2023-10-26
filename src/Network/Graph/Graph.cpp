@@ -262,6 +262,9 @@ int Graph::remain_resource_cnt(int node1_id, int node2_id, bool is1_repeater /*=
 
 
 Path* Graph::build_path(vector<int> nodes_id){
+    for(auto it:nodes_id){
+        cout<<it<<" ";
+    }
     if(nodes_id.size() < 2) cerr << "err:\ttry to build a path with len < 2\n";
     vector<Node *> path_nodes;
     vector<Channel*> path_channels;

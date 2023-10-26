@@ -474,6 +474,7 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
     }
 */
     // We should calculate every node's memory usage
+    cout<<"b[1]>>>>>>>>>>>>>>>"<<endl;
     for(unsigned int i = 1; i < set.size()-1; i++){
         for(unsigned int j = 0; j < all_given_path[req_no][(set[i]-1)%path_num].size(); j++){
             if(j == 0 || j == all_given_path[req_no][(set[i]-1)%path_num].size() - 1){
@@ -493,13 +494,14 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
             }
         }
     }
-
+    cout<<"b[1] end>>>>>>>>>>>>>>>"<<endl;
 /*
     for(auto it:memory_use){
         cout<<it<<" ";
     }
     cout<<endl;
 */
+
     for(int i = 0; i < graph.get_size(); i++){
         if(memory_use[i] == 0){
             continue;
@@ -527,12 +529,12 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
     // }
     // cout<<endl;
 
-
+    cout<<"b[2] start>>>>>>>>>>>>>>>"<<endl;
     int rate = 1;
     double s = min(min_s_u, min(min_s_uv, s_i));
     for(int i = 0; i < rate; i++){
         for(unsigned int j = 1; j < set.size()-1; j++){
-            path=all_given_path[req_no][set[j]%path_num-1];
+            path=all_given_path[req_no][(set[j]-1)%path_num];
             if(x_i_p.find(path) != x_i_p.end())                                         //add flow to path
                 x_i_p[path] += s;
             else
@@ -564,7 +566,7 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
         obj += (tau[req_no] * (1 +epsilon * s) - tau[req_no]);
         tau[req_no] = tau[req_no] * (1 + epsilon * s);
     }
-
+    cout<<"b[2] end>>>>>>>>>>>>>>>"<<endl;
 }
 
 double MyAlgo5::changing_obj(){
@@ -587,7 +589,7 @@ void MyAlgo5::find_violate(){
     vector<double> used_memory(graph.get_size());
     map<vector<int>, double> used_channel;
     map<pair<int, int>, double> used_request;
-
+    cout<<"v[1] start>>>>>>>>>>>>>>>"<<endl;
     for(auto &it : x_i_p){
         vector<int> path = it.first;
         int src = path[0];
@@ -599,6 +601,7 @@ void MyAlgo5::find_violate(){
             used_request[{src, dst}] = it.second;
         
         for(unsigned int i = 0; i < path.size() - 1; i++){
+            cout<<path[i]<<"~~~"<<path[i+1]<<endl;
             used_memory[path[i]] += it.second;                         //memory add
             used_memory[path[i+1]] += it.second;
             if(path[i] < path[i+1]){
@@ -621,11 +624,11 @@ void MyAlgo5::find_violate(){
             }
         }
     }
-
+    cout<<"v[1] end>>>>>>>>>>>>>>>"<<endl;
 
     double max_magni = 0.0;
     double cur_magni;
-
+    cout<<"v[2] start>>>>>>>>>>>>>>>"<<endl;
     for(auto it : used_request){
 
         // int src = it.first.first;
@@ -657,7 +660,7 @@ void MyAlgo5::find_violate(){
             max_magni = cur_magni;
         }
     }
-
+    cout<<"v[2] end>>>>>>>>>>>>>>>"<<endl;
 
     
 
@@ -1170,7 +1173,9 @@ void MyAlgo5::path_assignment(){
         path_graph_X.push_back(temp);
         path_graph_Y.push_back(temp);
     }
+    cout<<"create_pathGraph start>>>>>>>>>>>>>>>>>>>>"<<endl;
     create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value,true);
+    cout<<"create_pathGraph end>>>>>>>>>>>>>>>>>>>>"<<endl;
     //cout<<"while start>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
     obj = M * delta;
     vector<int> best_set;
@@ -1207,8 +1212,9 @@ void MyAlgo5::path_assignment(){
             }
         } 
         //cout <<"smallest req_no:"<<req_no<<" with " << smallest_U << endl;
-        
+        cout<<"bottleneck start>>>>>>>>>>>>>>>>>>>>"<<endl;
         find_bottleneck(best_set, req_no);
+        cout<<"bottleneck end>>>>>>>>>>>>>>>>>>>>"<<endl;
         //cout<<"finsih find_fbottle_neck"<<endl;
         create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value,false);
         //cout<<"finsih create_path"<<endl;
@@ -1217,7 +1223,7 @@ void MyAlgo5::path_assignment(){
         // cout<<"changing_obj obj: " << obj << endl ;
     }
     //cout<<"While_finsihed>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
-    calculate();
+
 
     cout<<"BEFORE VIOLATE>>>>>>>>>>>>>"<<endl;
     for(auto it:x_i_p){
@@ -1235,8 +1241,9 @@ void MyAlgo5::path_assignment(){
             cout<<" contain "<<it2.second<<endl;
         }
     }
-  
+    cout<<"find_violate start>>>>>>>>>>>>>>>>>>>>"<<endl;
     find_violate();
+    cout<<"find_violate end>>>>>>>>>>>>>>>>>>>>"<<endl;
     //cout<<"find_violate finished>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 
     cout<<"AFTER VIOLATE>>>>>>>>>>>>>"<<endl;

@@ -68,7 +68,7 @@ int main(int argc, char *argv[]){
 
     }
     map<string, double> default_setting;
-    default_setting["num_of_node"] = 30;
+    default_setting["num_of_node"] = 80;
     default_setting["area_alpha"] = 0.5;
     default_setting["memory_cnt_avg"] = 10;
     default_setting["channel_cnt_avg"] = 5;
@@ -76,12 +76,12 @@ int main(int argc, char *argv[]){
     
     default_setting["swap_prob"] = 0.97;
     default_setting["entangle_alpha"] = 0.0002;
-    default_setting["new_request_cnt"] = 3;
+    default_setting["new_request_cnt"] = 10;
     default_setting["total_time_slot"] = 1;
     default_setting["request_avg"] = 2;
     default_setting["epsilon"] = 0.2;    
     default_setting["value"] = 10;
-    default_setting["given_path_num"] = 5 ;
+    default_setting["given_path_num"] = 10 ;
     // not used in this paper
     default_setting["node_time_limit"] = 1;
     default_setting["social_density"] = 0.5;
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]){
     change_parameter["social_density"] = {0.25, 0.5, 0.75, 1}; 
     change_parameter["new_request_cnt"] = {20, 30, 40, 50, 60};
     //change_parameter["request_avg"] = {3,4,5};
-    change_parameter["num_of_node"] = { 30/*60, 70 , 80, 90, 100*/};
+    change_parameter["num_of_node"] = { 50/*60, 70 , 80, 90, 100*/};
     change_parameter["memory_cnt_avg"] = { 5 , 7, 9, 11 , 13};
     change_parameter["given_path_num"] = { 10, 11, 12, 13, 14, 15};
 
@@ -179,11 +179,11 @@ int main(int argc, char *argv[]){
                 vector<AlgorithmBase*> algorithms;
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha));
                 //algorithms.emplace_back(new Greedy(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , true));
-                algorithms.emplace_back(new Greedy(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
+                //algorithms.emplace_back(new Greedy(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
                 //algorithms.emplace_back(new QCAST(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , true));
-                algorithms.emplace_back(new QCAST(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
+                //algorithms.emplace_back(new QCAST(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
                 //algorithms.emplace_back(new REPS(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ,true ));
-                algorithms.emplace_back(new REPS(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ,false ));
+                //algorithms.emplace_back(new REPS(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ,false ));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha, 0.1 ));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha, 0.3));
@@ -237,7 +237,7 @@ int main(int argc, char *argv[]){
                     cout<< "---------generating requests in main.cpp----------end" << endl;
                     
 
-                    #pragma omp parallel for 
+                    //#pragma omp parallel for 
                     for(int i = 0; i < (int)algorithms.size(); i++){
                         auto &algo = algorithms[i];
                         ofs<<"-----------run "<< algo->get_name() << " ---------"<<endl;
@@ -259,7 +259,7 @@ int main(int argc, char *argv[]){
                 cout << endl;
                 for(auto &algo:algorithms){
                     //cout<<"("<<algo->get_name()<<")total throughput = "<<algo->get_res("throughputs")<<endl;
-                    cout<<"("<<algo->get_name()<<")total earn = "<<algo->get_res("total_earn")<<endl;
+                    cout<<fixed<<"("<<algo->get_name()<<")total earn = "<<algo->get_res("total_earn")<<endl;
                 }
                 
                 for(auto &algo:algorithms){

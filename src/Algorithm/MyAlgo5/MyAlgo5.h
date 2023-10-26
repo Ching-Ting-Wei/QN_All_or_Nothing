@@ -31,7 +31,7 @@ private:
     int diff_num = 0;
     int qubit_num = 3;
     double epsilon = 0.2;
-    int path_num;
+    int path_num ;
     double obj = 0;
     double delta;
     double M;  
