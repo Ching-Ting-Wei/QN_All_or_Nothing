@@ -55,7 +55,7 @@ void AlgorithmBase::base_next_time_slot(){
         for(auto it:requests[reqno].get_before_ent_path_prob_vt()){
             res_vt.push_back(it);
         }
-        if(requests[reqno].get_path_num() >= requests[reqno].get_send_demand()){
+        if(requests[reqno].get_throughput() >= requests[reqno].get_send_demand()){
             total_earn += requests[reqno].get_value();
         }
         else{

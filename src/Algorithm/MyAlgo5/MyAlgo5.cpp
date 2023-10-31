@@ -55,11 +55,11 @@ void MyAlgo5::yen(int src,int dst,int K,int req_no){
 
     all_given_path[req_no].push_back(Dijkstra(copy_graph,src,dst,rootpath));                        //get the first path
     /*
-    cout<<"[First path]";
+   //cout<<"[First path]";
     for(auto it:all_given_path[req_no][0]){
-        cout<<it<<" ";
+       //cout<<it<<" ";
     }
-    cout<<endl;
+   //cout<<endl;
     */
     for(int k = 1 ;k < K ;k++ ){                                                                    //find k path
         //cout<<"Noe finding the "<< k <<"path............."<<endl;
@@ -124,11 +124,11 @@ void MyAlgo5::yen(int src,int dst,int K,int req_no){
             get_delete.clear();
         }        
         // for(auto it:candidate_path){
-        //     cout<<"Candidate_path";
+        //    //cout<<"Candidate_path";
         //     for(auto it2:it){
-        //         cout<<it2<<" ";
+        //        //cout<<it2<<" ";
         //     }
-        //     cout<<endl;
+        //    //cout<<endl;
         // }
 
         if(candidate_path.size() == 0){
@@ -147,11 +147,11 @@ void MyAlgo5::yen(int src,int dst,int K,int req_no){
         }
         all_given_path[req_no].push_back(totalpath);
         /*
-        cout<<"[PATH]";
+       //cout<<"[PATH]";
         for(auto it:totalpath){
-            cout<<it<<" ";
+           //cout<<it<<" ";
         }
-        cout<<endl;
+       //cout<<endl;
         */
         for(auto it:candidate_path){
             it.clear();
@@ -162,7 +162,7 @@ void MyAlgo5::yen(int src,int dst,int K,int req_no){
 }
 
 void MyAlgo5::initialize(){                                               //Main idea [Path is edge]
-
+    
     M = graph.get_size() + graph.get_num_of_edge() + requests.size();              //M=V+E+I
     // delta = (1 + epsilon) * pow(((1 + epsilon) * M), (-1 / epsilon));         
     delta = (1 + epsilon) * (1.0 / pow((1 + epsilon) * M, 1.0 / epsilon));
@@ -190,7 +190,6 @@ void MyAlgo5::initialize(){                                               //Main
                 int src = requests[j].get_source();
                 int des = requests[j].get_destination();
                 double ent_p = exp(graph.Node_id2ptr(i)->distance(*graph.Node_id2ptr(it))*(-graph.get_entangle_alpha()));
-
                 if( make_pair(i, it) == make_pair(src, des) || make_pair(it, i) == make_pair(src, des) ) {
                     Y[j][{i, it}] = -log(ent_p);
                     Y[j][{it, i}] = -log(ent_p);
@@ -249,7 +248,7 @@ vector<int> MyAlgo5::Dijkstra(vector<vector<int>>&copy_graph, int src, int dst, 
     }
     
     if(distance[dst] >= INF){
-        cout<<"[Dijkstra Not Find Route]"<<endl;
+       //cout<<"[Dijkstra Not Find Route]"<<endl;
         return{};
     }
     int cur_node = dst;
@@ -315,11 +314,11 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
     //cout<<"SepDijkstra start"<<endl;
     SPT = SepDijkstra(dst, req_no, path_graph_X[req_no]);         //the first SPT is get by dijkstra
     
-    // cout<<"[SPT]";
+    ////cout<<"[SPT]";
     // for(auto it:SPT){
-    //     cout<<it<<" ";
+    //    //cout<<it<<" ";
     // }
-    // cout<<endl;
+    ////cout<<endl;
     
     int cur_node = src;                                     //counting the first path's U(X,Y)=c* e^r
     double c = 0;                                           //c = SUM[u,v]:alpha(u)+alpha(v)+beta(u,v)==X[u,v]
@@ -345,11 +344,11 @@ vector<int> MyAlgo5::separation_oracle(int req_no, double &req_Us, vector<vector
     //cout<<"[best_len]"<<best_len<<endl;
     req_Us = best_len;
 
-    // cout << "origin path: ";
+    ////cout << "origin path: ";
     // for(auto p : best_set){
-    //         cout << p << "->";
+    //        //cout << p << "->";
     // }
-    // cout << endl;
+    ////cout << endl;
 
     map<pair<int, int>, bool> used_edge;
     vector<int> new_path;   
@@ -466,15 +465,15 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
                                  
 /*
     for(unsigned int i = 1; i < set.size()-1; i++){
-        cout<<"[Real Path]:";
+       //cout<<"[Real Path]:";
         for(unsigned int j = 0; j < all_given_path[req_no][(set[i]-1)%path_num].size(); j++){
-            cout<<all_given_path[req_no][(set[i]-1)%path_num][j]<<" ";
+           //cout<<all_given_path[req_no][(set[i]-1)%path_num][j]<<" ";
         }
-        cout<<endl;
+       //cout<<endl;
     }
 */
     // We should calculate every node's memory usage
-    cout<<"b[1]>>>>>>>>>>>>>>>"<<endl;
+   //cout<<"b[1]>>>>>>>>>>>>>>>"<<endl;
     for(unsigned int i = 1; i < set.size()-1; i++){
         for(unsigned int j = 0; j < all_given_path[req_no][(set[i]-1)%path_num].size(); j++){
             if(j == 0 || j == all_given_path[req_no][(set[i]-1)%path_num].size() - 1){
@@ -494,12 +493,12 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
             }
         }
     }
-    cout<<"b[1] end>>>>>>>>>>>>>>>"<<endl;
+   //cout<<"b[1] end>>>>>>>>>>>>>>>"<<endl;
 /*
     for(auto it:memory_use){
-        cout<<it<<" ";
+       //cout<<it<<" ";
     }
-    cout<<endl;
+   //cout<<endl;
 */
 
     for(int i = 0; i < graph.get_size(); i++){
@@ -523,13 +522,13 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
         }
     }
 
-    // cout<<"[set]";
+    ////cout<<"[set]";
     // for(auto it:set){
-    //     cout<<it<<" ";
+    //    //cout<<it<<" ";
     // }
-    // cout<<endl;
+    ////cout<<endl;
 
-    cout<<"b[2] start>>>>>>>>>>>>>>>"<<endl;
+   //cout<<"b[2] start>>>>>>>>>>>>>>>"<<endl;
     int rate = 1;
     double s = min(min_s_u, min(min_s_uv, s_i));
     for(int i = 0; i < rate; i++){
@@ -566,7 +565,7 @@ void MyAlgo5::find_bottleneck(vector<int> set, int req_no){
         obj += (tau[req_no] * (1 +epsilon * s) - tau[req_no]);
         tau[req_no] = tau[req_no] * (1 + epsilon * s);
     }
-    cout<<"b[2] end>>>>>>>>>>>>>>>"<<endl;
+   //cout<<"b[2] end>>>>>>>>>>>>>>>"<<endl;
 }
 
 double MyAlgo5::changing_obj(){
@@ -589,7 +588,7 @@ void MyAlgo5::find_violate(){
     vector<double> used_memory(graph.get_size());
     map<vector<int>, double> used_channel;
     map<pair<int, int>, double> used_request;
-    cout<<"v[1] start>>>>>>>>>>>>>>>"<<endl;
+   //cout<<"v[1] start>>>>>>>>>>>>>>>"<<endl;
     for(auto &it : x_i_p){
         vector<int> path = it.first;
         int src = path[0];
@@ -601,7 +600,7 @@ void MyAlgo5::find_violate(){
             used_request[{src, dst}] = it.second;
         
         for(unsigned int i = 0; i < path.size() - 1; i++){
-            cout<<path[i]<<"~~~"<<path[i+1]<<endl;
+           //cout<<path[i]<<"~~~"<<path[i+1]<<endl;
             used_memory[path[i]] += it.second;                         //memory add
             used_memory[path[i+1]] += it.second;
             if(path[i] < path[i+1]){
@@ -624,11 +623,11 @@ void MyAlgo5::find_violate(){
             }
         }
     }
-    cout<<"v[1] end>>>>>>>>>>>>>>>"<<endl;
+   //cout<<"v[1] end>>>>>>>>>>>>>>>"<<endl;
 
     double max_magni = 0.0;
     double cur_magni;
-    cout<<"v[2] start>>>>>>>>>>>>>>>"<<endl;
+   //cout<<"v[2] start>>>>>>>>>>>>>>>"<<endl;
     for(auto it : used_request){
 
         // int src = it.first.first;
@@ -660,7 +659,7 @@ void MyAlgo5::find_violate(){
             max_magni = cur_magni;
         }
     }
-    cout<<"v[2] end>>>>>>>>>>>>>>>"<<endl;
+   //cout<<"v[2] end>>>>>>>>>>>>>>>"<<endl;
 
     
 
@@ -678,10 +677,10 @@ void MyAlgo5::find_violate(){
     //check memory_and_channel
     /*
     for(unsigned int i=0;i<used_memory.size();i++){
-        cout<<i<<" with memory "<<used_memory[i]<<endl;
+       //cout<<i<<" with memory "<<used_memory[i]<<endl;
     }
     for(auto it:used_channel){
-        cout<<"["<<it.first[0]<<","<<it.first[1]<<"]:"<<it.second<<endl;
+       //cout<<"["<<it.first[0]<<","<<it.first[1]<<"]:"<<it.second<<endl;
     }
     */
 }
@@ -734,7 +733,7 @@ void MyAlgo5::check_enough(vector<map<vector<int>, int>> &path){
     }
 
     bool flag;
-    // cout<<"Check Start>>>>>>>>>>>>>>>>>>>>>>>"<<endl;
+    ////cout<<"Check Start>>>>>>>>>>>>>>>>>>>>>>>"<<endl;
     while(1){
         flag = true;
         for(unsigned int i = 0; i < over_memory.size(); i++){
@@ -748,14 +747,14 @@ void MyAlgo5::check_enough(vector<map<vector<int>, int>> &path){
             }
         }
         if(flag == true){
-            // cout << "before" << endl;
+            ////cout << "before" << endl;
             // for(unsigned int i = 0; i < path.size(); i++){
             //     for(auto it:path[i]){
             //         vector<int>Final_path =it.first;
             //         for(auto it2:Final_path){
-            //             cout<<it2<<" ";
+            //            //cout<<it2<<" ";
             //         }
-            //         cout<<"     Qubits:"<<it.second<<endl;
+            //        //cout<<"     Qubits:"<<it.second<<endl;
             //         requests[i].add_cur(it.second);
             //     }
             // }
@@ -771,9 +770,9 @@ void MyAlgo5::check_enough(vector<map<vector<int>, int>> &path){
                 int associate_flag=false;
                 /*
                 for(auto temp:it.first){
-                    cout<<temp<<" ";
+                   //cout<<temp<<" ";
                 }
-                cout<<"-----------"<<endl;
+               //cout<<"-----------"<<endl;
                 */
                 for(unsigned int j=0;j<it.first.size()-1;j++){
 
@@ -868,7 +867,7 @@ void MyAlgo5::readd(vector<map<vector<int>, int>> &path,vector<int> &over_memory
                     for(auto it : path[re[i].second]){
                         if(it.first == re[i].first){
                             path[re[i].second][it.first] += 1;
-                            cout << "!!PATH +++" << endl;
+                           //cout << "!!PATH +++" << endl;
                             flag = true;
                             for(unsigned int j = 0; j < each_path.size() - 1; j++){
                                 over_memory[each_path[j]]++;
@@ -884,14 +883,14 @@ void MyAlgo5::readd(vector<map<vector<int>, int>> &path,vector<int> &over_memory
         }
     }
     // for(auto x : over_memory){
-    //     cout << "node: " << x << endl;
+    //    //cout << "node: " << x << endl;
     // }
     // for(auto x : over_channel){
-    //     cout<< "EDGE: ";
+    //    //cout<< "EDGE: ";
     //     for(auto a : x.first ){
-    //         cout<< a << " ";
+    //        //cout<< a << " ";
     //     }
-    //     cout << x.second << endl;
+    //    //cout << x.second << endl;
     // }
 
 }
@@ -927,6 +926,7 @@ void MyAlgo5::calculate(){
         for(unsigned int i=0;i < it.first.size() - 1;i++){
             prob*=exp(graph.Node_id2ptr(path[i])->distance(*graph.Node_id2ptr(path[i+1]))*(-graph.get_entangle_alpha()));
         }
+
         for(unsigned int i=1;i<it.first.size()-1;i++){
             prob*=graph.Node_id2ptr(path[i])->get_swap_prob();  
         }
@@ -958,11 +958,11 @@ vector<map<vector<int>, int>> MyAlgo5::Greedy_rounding(){
 		int request_id;
 		tie(prob, request_id, set) = it;
         /*
-        cout<<"id:"<<request_id<<" prob:"<<prob<<"------";
+       //cout<<"id:"<<request_id<<" prob:"<<prob<<"------";
         for(auto it2:set){
-            cout<<it2<<" ";
+           //cout<<it2<<" ";
         }  
-        cout<<endl;
+       //cout<<endl;
         */
     }
 	// 對 x^i_p 由小到大排序
@@ -1081,6 +1081,7 @@ void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vec
     // We need to build direct graph
     // [0] represent source node
     // [n*k+2] represent destination node
+
     int path_num = all_given_path[0].size();
     
     for(unsigned int i = 0; i < requests.size(); i++ ){
@@ -1094,25 +1095,25 @@ void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vec
             X_value[i][j] = c;
             Y_value[i][j] = r;
         }
-
+        
         for(int j = 0; j < path_num - requests[i].get_send_demand() + 1; j++){
             path_graph_X[i][0][j+1] = X_value[i][j];
             path_graph_Y[i][0][j+1] = Y_value[i][j];
         }
- 
+        
         for(int j = 0; j < requests[i].get_send_demand() - 1; j++){
    
             for(int k = 0; k < path_num; k++){
          
                 if((path_num - k) - (requests[i].get_send_demand() - j) < 0) continue;
-                for(int l = k + 1; l < path_num; l++){
+                for(int l = k ; l < path_num; l++){
                     if((path_num - l) - (requests[i].get_send_demand() - 1 - j) < 0) continue;
                     path_graph_X[i][j * path_num + k + 1][(j + 1) * path_num + l + 1] = X_value[i][l];
                     path_graph_Y[i][j * path_num + k + 1][(j + 1) * path_num + l + 1] = Y_value[i][l];
                 }
             }
         }   
-     
+        
         for(int j = 0; j < path_num; j++){
       
             path_graph_X[i][path_num * (requests[i].get_send_demand() - 1) + j + 1][path_num * requests[i].get_send_demand() + 1] = 0;
@@ -1127,16 +1128,16 @@ void MyAlgo5::create_pathGraph(vector<vector<vector<double>>> &path_graph_X, vec
                 for(int k = 0; k < path_num * requests[i].get_send_demand() + 2; k++){
                     /*
                     if(path_graph_X[i][j][k] != -1){
-                        cout << "1";
+                       //cout << "1";
                     }else{
-                        cout << 0;
+                       //cout << 0;
                     }
                     */
-                    cout << setprecision(2) << path_graph_X[i][j][k]<<"*";
+                   //cout << setprecision(2) << path_graph_X[i][j][k]<<"*";
                 }
-                cout << endl;
+               //cout << endl;
             }
-            cout << "---------------------------------------------" << endl;
+           //cout << "---------------------------------------------" << endl;
         }
     }
 }
@@ -1151,15 +1152,15 @@ void MyAlgo5::path_assignment(){
 
     //show given path
     for(auto it:all_given_path){
-        cout<<"Next Request -----------"<<endl;
+       //cout<<"Next Request -----------"<<endl;
         for(auto it2:it){
-            cout<<"[Path]";
+           //cout<<"[Path]";
             for(auto it3:it2){
-                cout<<it3<<" ";
+               //cout<<it3<<" ";
             }
-            cout<<endl;
+           //cout<<endl;
         }
-        cout<<endl;
+       //cout<<endl;
     }
 
 
@@ -1168,14 +1169,13 @@ void MyAlgo5::path_assignment(){
     vector<vector<vector<double>>> path_graph_Y;
     vector<vector<double>> X_value(requests.size(), vector<double>(path_num));
     vector<vector<double>> Y_value(requests.size(), vector<double>(path_num));
+    
     for(unsigned int i = 0; i<requests.size(); i++){
         vector<vector<double>> temp(path_num * requests[i].get_send_demand() + 2, vector<double>(path_num * requests[i].get_send_demand() + 2,-1));
         path_graph_X.push_back(temp);
         path_graph_Y.push_back(temp);
     }
-    cout<<"create_pathGraph start>>>>>>>>>>>>>>>>>>>>"<<endl;
     create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value,true);
-    cout<<"create_pathGraph end>>>>>>>>>>>>>>>>>>>>"<<endl;
     //cout<<"while start>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
     obj = M * delta;
     vector<int> best_set;
@@ -1196,11 +1196,11 @@ void MyAlgo5::path_assignment(){
         }
         
         // for(auto it:all_path_set){
-        //     cout<<"[SET]";
+        //    //cout<<"[SET]";
         //     for(auto it2:it){
-        //         cout<<it2<<" ";
+        //        //cout<<it2<<" ";
         //     }
-        //     cout<<endl;
+        //    //cout<<endl;
         // }
 
         for(unsigned int i = 0; i < requests.size(); i++){
@@ -1212,62 +1212,63 @@ void MyAlgo5::path_assignment(){
             }
         } 
         //cout <<"smallest req_no:"<<req_no<<" with " << smallest_U << endl;
-        cout<<"bottleneck start>>>>>>>>>>>>>>>>>>>>"<<endl;
+       //cout<<"bottleneck start>>>>>>>>>>>>>>>>>>>>"<<endl;
         find_bottleneck(best_set, req_no);
-        cout<<"bottleneck end>>>>>>>>>>>>>>>>>>>>"<<endl;
+       //cout<<"bottleneck end>>>>>>>>>>>>>>>>>>>>"<<endl;
         //cout<<"finsih find_fbottle_neck"<<endl;
         create_pathGraph(path_graph_X, path_graph_Y, X_value, Y_value,false);
         //cout<<"finsih create_path"<<endl;
         //cout <<"obj:"<< obj << endl;
         // obj = changing_obj();
-        // cout<<"changing_obj obj: " << obj << endl ;
+        //cout<<"changing_obj obj: " << obj << endl ;
     }
     //cout<<"While_finsihed>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 
-
-    cout<<"BEFORE VIOLATE>>>>>>>>>>>>>"<<endl;
+/*
+   cout<<"BEFORE VIOLATE>>>>>>>>>>>>>"<<endl;
     for(auto it:x_i_p){
         for(auto it2:it.first){
-            cout<<it2<<" ";
+           //cout<<it2<<" ";
         }
-        cout<<" with "<<it.second<<endl;
+       //cout<<" with "<<it.second<<endl;
     }
-    cout<<"SET"<<endl;
+   //cout<<"SET"<<endl;
     for(auto it:x_i_s){
         for(auto it2:it){
             for(auto it3:it2.first){
-                cout<<it3<<" ";
+               //cout<<it3<<" ";
             }
-            cout<<" contain "<<it2.second<<endl;
+           //cout<<" contain "<<it2.second<<endl;
         }
     }
-    cout<<"find_violate start>>>>>>>>>>>>>>>>>>>>"<<endl;
+   cout<<"find_violate start>>>>>>>>>>>>>>>>>>>>"<<endl;
+*/
     find_violate();
-    cout<<"find_violate end>>>>>>>>>>>>>>>>>>>>"<<endl;
+   //cout<<"find_violate end>>>>>>>>>>>>>>>>>>>>"<<endl;
     //cout<<"find_violate finished>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
-
-    cout<<"AFTER VIOLATE>>>>>>>>>>>>>"<<endl;
+/*
+   cout<<"AFTER VIOLATE>>>>>>>>>>>>>"<<endl;
     for(auto it:x_i_p){
         for(auto it2:it.first){
-            cout<<it2<<" ";
+           cout<<it2<<" ";
         }
-        cout<<" with "<<it.second<<endl;
+       cout<<" with "<<it.second<<endl;
     }
-    cout<<"SET"<<endl;
+   cout<<"SET"<<endl;
     for(auto it:x_i_s){
         for(auto it2:it){
             for(auto it3:it2.first){
-                cout<<it3<<" ";
+               //cout<<it3<<" ";
             }
-            cout<<" contain "<<it2.second<<endl;
+           //cout<<" contain "<<it2.second<<endl;
         }
     }
+*/
 
     vector<map<vector<int>, int>>path = Greedy_rounding();
     //cout<<"greedy finished>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
     res["change_edge_num"] = change_edge_num;
     res["diff_edge_num"] = diff_num;
-
 
 }   
 
