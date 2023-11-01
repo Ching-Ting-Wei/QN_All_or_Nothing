@@ -1,0 +1,23 @@
+    default_setting["num_of_node"] = 70;
+    default_setting["area_alpha"] = 0.4;
+    default_setting["memory_cnt_avg"] = 15;
+    default_setting["channel_cnt_avg"] = 7;
+    default_setting["new_request_cnt"] = 30;
+    default_setting["resource_ratio"] = 1;
+    default_setting["swap_prob"] = 0.9;
+    default_setting["entangle_alpha"] = 0.0002;
+    default_setting["total_time_slot"] = 1;
+    default_setting["request_avg"] = 3;
+    default_setting["epsilon"] = 0.1;    
+    default_setting["swap_ratio"] = 1;                             
+    default_setting["given_path_num"] = 10 ;
+    // not used in this paper
+    default_setting["node_time_limit"] = 1;
+    default_setting["social_density"] = 0.5;
+    default_setting["min_fidelity"] = 0.7;
+    default_setting["max_fidelity"] = 0.95;
+    default_setting["request_time_limit"] = 1;
+    default_setting["service_time"] = 100;
+    default_setting["value"] = 10;
+
+    distribute (1,1)
