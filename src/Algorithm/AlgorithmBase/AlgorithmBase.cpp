@@ -34,7 +34,7 @@ void AlgorithmBase::base_next_time_slot(){
     double max_req_success_ratio = 0;
     double total_req_success_ratio = 0;
     double max_over_ratio = 0;
-    int total_earn = 0;
+    double total_earn = 0;
     int drop_req_no = 0;
     graph.refresh();
     graph.release();
@@ -57,6 +57,7 @@ void AlgorithmBase::base_next_time_slot(){
         }
         if(requests[reqno].get_throughput() >= requests[reqno].get_send_demand()){
             total_earn += requests[reqno].get_value() * requests[reqno].get_willness();
+            //cout<<"value:"<<requests[reqno].get_value()<<" willness:"<<requests[reqno].get_willness()<<endl;
         }
         else{
             drop_req_no ++;
