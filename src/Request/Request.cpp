@@ -20,6 +20,7 @@ Request::~Request(void){
     paths.clear();
 }
 
+
 void Request::set_path(int path_id, Path *p){
     if(path_id >= (int)paths.size()){
         cerr<<"can't set this path!"<<endl;
@@ -51,9 +52,7 @@ int Request::get_before_ent_path_num(){
 double Request::get_before_ent_total_prob(){
     return before_ent_total_prob;
 }
-// int Request::get_waiting_time(){
-//     return waiting_time;
-// }
+
 int Request::get_source(){ 
     return source;
 }
@@ -86,6 +85,7 @@ vector<Path *> Request::get_paths(){
 int Request::get_throughput(){
     return this->throughput;
 }
+
 
 void Request::clear_paths(){
     for(int i=0;i < (int)paths.size();i++){
@@ -198,6 +198,22 @@ void Request::operator+=(Path *path){
 void Request::delete_path(){
     paths.pop_back();
 }
+
+double Request::get_willness(){
+    return willness;
+}
+
+void Request::set_value(int val){
+    value = val;
+}
+
+void Request::set_willness(double will){
+    willness = will;
+}
+
+// int Request::get_waiting_time(){
+//     return waiting_time;
+// }
 
 
 
