@@ -56,7 +56,7 @@ void AlgorithmBase::base_next_time_slot(){
             res_vt.push_back(it);
         }
         if(requests[reqno].get_throughput() >= requests[reqno].get_send_demand()){
-            total_earn += requests[reqno].get_value();
+            total_earn += requests[reqno].get_value() * requests[reqno].get_willness();
         }
         else{
             drop_req_no ++;

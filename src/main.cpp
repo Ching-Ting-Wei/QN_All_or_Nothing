@@ -55,7 +55,6 @@ void create_dir_if_not_exists(const std::string &path) {
 }
 
 
-
 int main(int argc, char *argv[]){
     string file_path = "../data/";
     if(argc > 1){
@@ -66,14 +65,13 @@ int main(int argc, char *argv[]){
 	create_dir_if_not_exists(file_path+"ans");
 	create_dir_if_not_exists(file_path+"input");
 	create_dir_if_not_exists(file_path+"log");
-
     }
     map<string, double> default_setting;
     default_setting["num_of_node"] = 70;
     default_setting["area_alpha"] = 0.4;
     default_setting["memory_cnt_avg"] = 15;
     default_setting["channel_cnt_avg"] = 7;
-    default_setting["new_request_cnt"] = /*30;*/ 2;
+    default_setting["new_request_cnt"] = 40;
     default_setting["resource_ratio"] = 1;
     default_setting["swap_prob"] = 0.9;
     default_setting["entangle_alpha"] = 0.0002;
@@ -120,9 +118,9 @@ int main(int argc, char *argv[]){
     }
     random_device rd2;
     default_random_engine generator2 = default_random_engine(rd2());;
-    std::normal_distribution<double> normal_distribution(1.0,1.0);
+    std::normal_distribution<double> normal_distribution(1.0,1.5);
 
-    int round = 1;
+    int round = 100;
     for(string X_name : X_names) {
         map<string, double> input_parameter = default_setting;
         for(double change_value : change_parameter[X_name]) {         
@@ -159,7 +157,7 @@ int main(int argc, char *argv[]){
             // python generate graph
 
 
-            //#pragma omp parallel for
+            #pragma omp parallel for
             for(int T = 0; T < round; T++){
                 string round_str = to_string(T);
                 ofstream ofs;
@@ -183,11 +181,11 @@ int main(int argc, char *argv[]){
                 vector<AlgorithmBase*> algorithms;
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha));
                 //algorithms.emplace_back(new Greedy(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , true));
-                //algorithms.emplace_back(new Greedy(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
+                algorithms.emplace_back(new Greedy(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
                 //algorithms.emplace_back(new QCAST(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , true));
-                //algorithms.emplace_back(new QCAST(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
+                algorithms.emplace_back(new QCAST(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha , false));
                 //algorithms.emplace_back(new REPS(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ,true ));
-                //algorithms.emplace_back(new REPS(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ,false ));
+                algorithms.emplace_back(new REPS(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha ,false ));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha, 0.1 ));
                 //algorithms.emplace_back(new MyAlgo3(filename, request_time_limit, node_time_limit, swap_prob, entangle_alpha, 0.3));
@@ -211,30 +209,27 @@ int main(int argc, char *argv[]){
                         do{
                             check_no_repeat=true;
                             Request new_request = generate_new_request(num_of_node, request_time_limit, min_request, max_request, min_value, max_value);
-                            cout<<"new"<<new_request.get_source()<<"----------->"<<new_request.get_destination()<<endl;
+                            //cout<<"new"<<new_request.get_source()<<"----------->"<<new_request.get_destination()<<endl;
 
                             for(auto &req_num:algorithms[0]->get_requests()){
-                                cout<<req_num.get_source()<<"------------->"<<req_num.get_destination()<<endl;
+                                //cout<<req_num.get_source()<<"------------->"<<req_num.get_destination()<<endl;
                                 if(req_num.get_source()==new_request.get_source() && req_num.get_destination()==new_request.get_destination()){
                                     check_no_repeat=false;
                                 }
                             }
                             if(check_no_repeat==true){
                                 cout<<q << ". source: " << new_request.get_source()<<", destination: "<<new_request.get_destination()<<endl;
-                                for(auto &algo:algorithms){
-                                    result[T][algo->get_name()]["total_request"]++; 
-                                    algo->add_new_request(new_request);
-                                }
+
                                 //------------------setting value to requests------------------
                                 //algorithms[0]->add_new_request(new_request);
-                            }
-                            /*
+                            
+                            
                                 double willness=0;
                                 while(willness<1.0 || willness>3.0){
                                     willness = normal_distribution(generator2);
                                 }
                                 new_request.set_willness(willness);
-                                cout<<"willness:"<<new_request.get_willness()<<endl;
+                                //cout<<"willness:"<<new_request.get_willness()<<endl;
 
                                 //--------------------graph------------------------------------
                                 ifstream graph_input;
@@ -298,18 +293,15 @@ int main(int argc, char *argv[]){
                                     src = j;
                                 }
                                 new_request.set_value(distance[new_request.get_destination()]+distance[new_request.get_destination()]*swap_ratio);
-                                cout<<"new_request "<<q<<" with value:"<<new_request.get_value()<<" and willness:"<<new_request.get_willness()<<" in round "<<T<<endl;
+                                //cout<<"new_request "<<q<<" with value:"<<new_request.get_value()<<" and willness:"<<new_request.get_willness()<<" in round "<<T<<endl;
                                 for(auto &algo:algorithms){
                                     result[T][algo->get_name()]["total_request"]++; 
                                     algo->add_new_request(new_request);
                                     //cout<<"what happend "<<algorithms[0]->get_requests().size()<<endl;
                                 }
                                 graph_input.close();
-                            }
-                            cout<<"else====================\n";
-                            */
+                            }   
                         }while(check_no_repeat==false);
-                        cout<<"ENd====================\n";
                     }
 
                     cout<< "---------generating requests in main.cpp----------end" << endl;
