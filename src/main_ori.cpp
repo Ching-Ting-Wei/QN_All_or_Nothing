@@ -77,17 +77,17 @@ int main(int argc, char *argv[]){
     default_setting["entangle_alpha"] = 0.0002;
     default_setting["total_time_slot"] = 1;
     default_setting["request_avg"] = 3;
-    default_setting["epsilon"] = 0.1;    
-    default_setting["swap_ratio"] = 1;                             
+    default_setting["epsilon"] = 0.2;    
+    default_setting["value"] = 30;
     default_setting["given_path_num"] = 10 ;
     // not used in this paper
     default_setting["node_time_limit"] = 1;
     default_setting["social_density"] = 0.5;
     default_setting["min_fidelity"] = 0.7;
     default_setting["max_fidelity"] = 0.95;
+    default_setting["swap_ratio"] = 1; 
     default_setting["request_time_limit"] = 1;
     default_setting["service_time"] = 100;
-    default_setting["value"] = 10;
     map<string, vector<double>> change_parameter;
     change_parameter["swap_prob"] = {0.75, 0.8 , 0.85, 0.9 ,0.95};
     change_parameter["entangle_alpha"] = {0.0004, 0.0003,0.0002, 0.0001, 0};
@@ -98,12 +98,12 @@ int main(int argc, char *argv[]){
     change_parameter["swap_ratio"] = {0.25, 0.5, 1,  1.5, 2};
     change_parameter["new_request_cnt"] = {20, 30, 40, 50, 60};
     //change_parameter["request_avg"] = {3,4,5};
-    change_parameter["num_of_node"] = { 50, 60, 70 , 80, 90, 100};
+    change_parameter["num_of_node"] = { /*50,60,70,80,90,*/100};
     change_parameter["memory_cnt_avg"] = { 5 , 7, 9, 11 , 13};
     change_parameter["given_path_num"] = { 10, 11, 12, 13, 14, 15};
 
     vector<string> X_names =  { /*"new_request_cnt" ,"swap_prob","entangle_alpha","resource_ratio",   "memory_cnt_avg" , "area_alpha" ,"given_path_num",*/"num_of_node"/*,,"request_avg"*/}; 
-    vector<string> Y_names =  {  "use_memory", "use_channel","drop_req_no" ,"total_earn", "value_per_memory", "value_per_channel"
+    vector<string> Y_names =  {  "runtime", "use_channel","drop_req_no" ,"total_earn", "value_per_memory", "value_per_channel","use_memory"
                              /*"throughputs" ,"max_over_ratio","S_D_complete_ratio_difference", "path_success_avg" ,
                              "path_success_avg_before_ent", "new_success_ratio","use_memory_ratio","use_channel_ratio",
 			                 "divide_cnt", "change_edge_num", "diff_edge_num", "diff_rate","edge_difference"*/};
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
     default_random_engine generator2 = default_random_engine(rd2());;
     std::normal_distribution<double> normal_distribution(1.0,1.5);
 
-    int round = 100;
+    int round = 150;
     for(string X_name : X_names) {
         map<string, double> input_parameter = default_setting;
         for(double change_value : change_parameter[X_name]) {         
@@ -333,13 +333,17 @@ int main(int argc, char *argv[]){
                 }
                 
                 for(auto &algo:algorithms){
+                    if(algo->get_name()=="MyAlgo5"){
+                        result[T]["MyAlgo5"]["UB"]=algo->get_res("UB");
+                    }
                     for(string Y_name : Y_names) {
                         result[T][algo->get_name()][Y_name] = algo->get_res(Y_name);
                     }
                 }
+
                 
 
-                /*
+                
                 for(auto &algo:algorithms){
                     for(string Y_name :Y_names){
                         for(auto it:algo->get_res_vt()){
@@ -347,7 +351,7 @@ int main(int argc, char *argv[]){
                         }
                     }
                 }
-                */
+
 
                 now = time(0);
                 dt = ctime(&now);
@@ -384,12 +388,12 @@ int main(int argc, char *argv[]){
                 result[T]["MyAlgo"]["edge_difference"] = result[T]["MyAlgo"]["change_edge_num"] - result[T]["MyAlgo3"]["change_edge_num"];
             }
             */
-            // double min_UB;
-            // for(int T = 0; T < round; T++){
-            // cout<<result[T]["MyAlgo3"]["primal"]<<" "<<result[T]["MyAlgo3_0.100000"]["primal"]<<" "<<result[T]["MyAlgo3_0.300000"]["primal"]<<endl;
-            //  min_UB=min(result[T]["MyAlgo3"]["primal"],min(result[T]["MyAlgo3_0.100000"]["primal"],result[T]["MyAlgo3_0.300000"]["primal"]));
-            //  sum_res["MyAlgo3"]["primal"] += min_UB;
-            //}
+
+            for(int T = 0; T < round; T++){
+            //cout<<result[T]["MyAlgo3"]["primal"]<<" "<<result[T]["MyAlgo3_0.100000"]["primal"]<<" "<<result[T]["MyAlgo3_0.300000"]["primal"]<<endl;
+              sum_res["MyAlgo5"]["UB"] += result[T]["MyAlgo5"]["UB"];
+              //cout<<"Outside UB:"<< result[T]["MyAlgo5"]["UB"]<<endl;
+            }
             
                 
 
@@ -406,35 +410,36 @@ int main(int argc, char *argv[]){
                     ofs << sum_res[algo_name][Y_name] / round << ' ';
                     
                 }
-                /*
-                if(Y_name == "throughputs"){
-                    ofs << sum_res["MyAlgo3"]["primal"] / round << " ";
+                
+                if(Y_name == "total_earn"){
+                    ofs << sum_res["MyAlgo5"]["UB"] / round << " ";
                 }
-                */
+                
                 ofs << endl;
                 ofs.close();
             }
 
-            /*
-            for(string Y_name : Y_names){
+            
+
                 
-                string filename = "ans/" + X_name + "_" + Y_name + "_before_ent_path_prob_vt.ans";
-                ofstream ofs;
-                ofs.open(file_path + filename, ios::app);
-                ofs << change_value << endl;
-                
-                for(string algo_name : algo_names){
-                    ofs<<algo_name<<endl;
-                    sort(sum_vt[algo_name][Y_name].begin(),sum_vt[algo_name][Y_name].end());
-                    for(auto it:sum_vt[algo_name][Y_name]){
-                        ofs << it << " ";
-                    }
-                    ofs << endl;
-                }
-                ofs << endl;
-                ofs.close();
-            }
-            */
+            // string filename = "ans/" + X_name + "_success_path_prob_vt.ans";
+            // ofstream ofs;
+            // ofs.open(file_path + filename, ios::app);
+            // ofs << change_value << endl;
+            
+            // for(string algo_name : algo_names){
+            //     ofs<<algo_name<<endl;
+            //     sort(sum_vt[algo_name]["runtime"].begin(),sum_vt[algo_name]["runtime"].end());
+            //     for(auto it:sum_vt[algo_name]["runtime"]){
+            //         ofs << it << " ";
+            //     }
+            //     ofs << endl;
+            // }
+            
+            // ofs << endl;
+            // ofs.close();
+            
+            
         }
     }
     return 0;

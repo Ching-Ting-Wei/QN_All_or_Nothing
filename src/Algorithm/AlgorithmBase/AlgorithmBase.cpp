@@ -26,10 +26,8 @@ bool AlgorithmBase::get_limit_r_status(){
 }
 
 void AlgorithmBase::base_next_time_slot(){
-    int total_path_num = 0;
-    int before_ent_path_num = 0;
-    double total_success_prob = 0;
-    double before_ent_total_success_prob = 0;
+
+    double success_prob = 1;
     double min_req_success_ratio = 100;
     double max_req_success_ratio = 0;
     double total_req_success_ratio = 0;
@@ -44,24 +42,41 @@ void AlgorithmBase::base_next_time_slot(){
 
     //好強
     vector<int> finished_reqno;
-    res_vt.clear();
-    for(int reqno = 0; reqno < (int)requests.size(); reqno++) {
+    vector<double> temp;
+    res_vt.clear();                                                                 //存放request set的prob的vector
+    for(int reqno = 0; reqno < (int)requests.size(); reqno++) {                     //對於每個req
         double req_success_ratio;
-        total_path_num += requests[reqno].get_path_num();
-        before_ent_path_num += requests[reqno].get_before_ent_path_num();
-        total_success_prob += requests[reqno].get_total_prob();
-        before_ent_total_success_prob += requests[reqno].get_before_ent_total_prob();
-
-        for(auto it:requests[reqno].get_before_ent_path_prob_vt()){
-            res_vt.push_back(it);
-        }
-        if(requests[reqno].get_throughput() >= requests[reqno].get_send_demand()){
-            total_earn += requests[reqno].get_value() * requests[reqno].get_willness();
-            cout<<"value:"<<requests[reqno].get_value()<<" willness:"<<requests[reqno].get_willness()<<endl;
+        success_prob = 1;                                                   
+        if(requests[reqno].get_success_path_prob_vt().size() >= requests[reqno].get_send_demand()){     //如果成功的路>k個
+            temp=requests[reqno].get_success_path_prob_vt();                                            //temp先等於存放當前req的所有路的成功機率
+            sort(temp.rbegin(),temp.rend());                                        //由大到小排序
+            int cal_path=1;     
+            //cout<<"Request's k:"<<requests[reqno].get_send_demand()<<endl;                
+            for(auto it:temp){       
+                                                                                       //如果以計算k個就停止
+                if(cal_path > requests[reqno].get_send_demand()){
+                    break;
+                }
+                success_prob*=it;                                                   //req prob=k條路的個別成功機率乘積
+                ++cal_path;
+            }
+            //cout<<requests[reqno].get_source()<<"-->"<<requests[reqno].get_destination()<<"with :"<<success_prob<<endl;
+            res_vt.push_back(success_prob);                                         //res push back 當前req的成功機率
+            total_earn += requests[reqno].get_value() * requests[reqno].get_willness() * success_prob;   //計算期望值weight
         }
         else{
+            res_vt.push_back(0);                                                    //當沒超過k條路成功，push
             drop_req_no ++;
         }
+
+        // if(requests[reqno].get_throughput() >= requests[reqno].get_send_demand()){
+        //     total_earn += requests[reqno].get_value() * requests[reqno].get_willness();
+        //     cout<<"value:"<<requests[reqno].get_value()<<" willness:"<<requests[reqno].get_willness()<<endl;
+        // }
+        // else{
+        //     drop_req_no ++;
+        // }
+
         if(requests[reqno].get_throughput() == 0){
             req_success_ratio = 0.0;
         }else{
@@ -100,9 +115,9 @@ void AlgorithmBase::base_next_time_slot(){
     }
     res["total_earn"] = total_earn;
     res["drop_req_no"] = drop_req_no;
-    res["path_success_avg"] = total_success_prob / total_path_num;
-    res["path_success_avg_before_ent"] = before_ent_total_success_prob / before_ent_path_num;
-    res["S_D_complete_ratio_difference"] = max_req_success_ratio - min_req_success_ratio;
+    // res["path_success_avg"] = total_success_prob / total_path_num;
+    // res["path_success_avg_before_ent"] = before_ent_total_success_prob / before_ent_path_num;
+    // res["S_D_complete_ratio_difference"] = max_req_success_ratio - min_req_success_ratio;
     res["new_success_ratio"] = total_req_success_ratio / requests.size();
     res["max_over_ratio"] = max_over_ratio;
     res["dis_avg"] = graph.get_dis_avg();

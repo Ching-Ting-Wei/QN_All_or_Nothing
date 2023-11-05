@@ -69,18 +69,18 @@ int main(int argc, char *argv[]){
     }
     map<string, double> default_setting;
     default_setting["num_of_node"] = 70;
-    default_setting["area_alpha"] = 0.6;
-    default_setting["memory_cnt_avg"] = 12;
-    default_setting["channel_cnt_avg"] = 5;
-    default_setting["new_request_cnt"] = 30;
+    default_setting["area_alpha"] = 0.4;
+    default_setting["memory_cnt_avg"] = 15;
+    default_setting["channel_cnt_avg"] = 7;
+    default_setting["new_request_cnt"] = 40;
     default_setting["resource_ratio"] = 1;
-    default_setting["swap_prob"] = 0.97;
+    default_setting["swap_prob"] = 0.9;
     default_setting["entangle_alpha"] = 0.0002;
     default_setting["total_time_slot"] = 1;
     default_setting["request_avg"] = 3;
-    default_setting["epsilon"] = 0.1;    
-    default_setting["value"] = 25;
-    default_setting["given_path_num"] = 10;
+    default_setting["epsilon"] = 0.2;    
+    default_setting["value"] = 30;
+    default_setting["given_path_num"] = 10 ;
     // not used in this paper
     default_setting["node_time_limit"] = 1;
     default_setting["social_density"] = 0.5;
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]){
 
     map<string, vector<double>> change_parameter;
     change_parameter["swap_prob"] = {0.75, 0.8 , 0.85, 0.9 ,0.95};
-    change_parameter["entangle_alpha"] = {0.01 ,0.005 ,0.001, 0.0005, 0.0001};
+    change_parameter["entangle_alpha"] = {0.0003 ,0.00025, 0.0002, 0.00015,0.0001, 0.00005,0};
     change_parameter["min_fidelity"] = {0.5, 0.7, 0.75, 0.85, 0.95};
     change_parameter["resource_ratio"] = {0.5, 1, 1.5, 2, 2.5};
     change_parameter["area_alpha"] = {0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9}; 
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]){
         fstream file( file_path + filename, ios::out );
     }
 
-    int round = 100;
+    int round = 150;
     map<string, double> input_parameter = default_setting;
     vector<vector<Request>>request_list(round);
     vector<map<string, map<string, double>>> result(round);
@@ -336,6 +336,9 @@ int main(int argc, char *argv[]){
                 }
                 
                 for(auto &algo:algorithms){
+                    if(algo->get_name()=="MyAlgo5"){
+                        result[T]["MyAlgo5"]["UB"]=algo->get_res("UB");
+                    }
                     for(string Y_name : Y_names) {
                         result[T][algo->get_name()][Y_name] = algo->get_res(Y_name);
                     }
@@ -374,7 +377,11 @@ int main(int argc, char *argv[]){
 
             }
         }
-        
+        for(int T = 0; T < round; T++){
+            //cout<<result[T]["MyAlgo3"]["primal"]<<" "<<result[T]["MyAlgo3_0.100000"]["primal"]<<" "<<result[T]["MyAlgo3_0.300000"]["primal"]<<endl;
+              sum_res[0]["MyAlgo5"]["UB"] += result[T]["MyAlgo5"]["UB"];
+              //cout<<"Outside UB:"<< result[T]["MyAlgo5"]["UB"]<<endl;
+        }
         for(string Y_name : Y_names) {
             string filename = "ans/entangle_alpha_" + Y_name + ".ans";
             ofstream ofs;
@@ -390,11 +397,9 @@ int main(int argc, char *argv[]){
                     ofs << sum_res[change_index][algo_name][Y_name] / round << ' ';
                 
             }
-            /*
-            if(Y_name == "throughputs"){
-                ofs << sum_res["MyAlgo3"]["primal"] / round << " ";
+            if(Y_name == "total_earn"){
+                ofs << sum_res[0]["MyAlgo5"]["UB"] / round << " ";
             }
-            */
             ofs << endl;
             ofs.close();
         }

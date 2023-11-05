@@ -106,7 +106,7 @@ void MyAlgo5::yen(int src,int dst,int K,int req_no){
                 totalpath.push_back(it);
             }
             //cout<<endl;
-
+            
             bool inB=false;                                                                         //check if totalpath is already in candidate path
             for(auto it:candidate_path){
                 if(it == totalpath){
@@ -1223,31 +1223,7 @@ void MyAlgo5::path_assignment(){
         //cout<<"changing_obj obj: " << obj << endl ;
     }
     //cout<<"While_finsihed>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
-
 /*
-   cout<<"BEFORE VIOLATE>>>>>>>>>>>>>"<<endl;
-    for(auto it:x_i_p){
-        for(auto it2:it.first){
-           //cout<<it2<<" ";
-        }
-       //cout<<" with "<<it.second<<endl;
-    }
-   //cout<<"SET"<<endl;
-    for(auto it:x_i_s){
-        for(auto it2:it){
-            for(auto it3:it2.first){
-               //cout<<it3<<" ";
-            }
-           //cout<<" contain "<<it2.second<<endl;
-        }
-    }
-   cout<<"find_violate start>>>>>>>>>>>>>>>>>>>>"<<endl;
-*/
-    find_violate();
-   //cout<<"find_violate end>>>>>>>>>>>>>>>>>>>>"<<endl;
-    //cout<<"find_violate finished>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
-/*
-   cout<<"AFTER VIOLATE>>>>>>>>>>>>>"<<endl;
     for(auto it:x_i_p){
         for(auto it2:it.first){
            cout<<it2<<" ";
@@ -1255,15 +1231,84 @@ void MyAlgo5::path_assignment(){
        cout<<" with "<<it.second<<endl;
     }
    cout<<"SET"<<endl;
+   int req_no = 0;
     for(auto it:x_i_s){
         for(auto it2:it){
-            for(auto it3:it2.first){
-               //cout<<it3<<" ";
+            for(int set_num=1;set_num<it2.first.size()-1;set_num++){
+                vector<int>temp_path=all_given_path[req_no][(it2.first[set_num]-1)%path_num];
+                for(int node_index=0;node_index<temp_path.size();node_index++){
+                    cout<<temp_path[node_index]<<" ";
+                }
+                cout<<" with:"<<it2.second<<"\n";
             }
            //cout<<" contain "<<it2.second<<endl;
         }
+        ++req_no;
     }
 */
+    find_violate();
+   //cout<<"find_violate end>>>>>>>>>>>>>>>>>>>>"<<endl;
+    //cout<<"find_violate finished>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+
+   cout<<"AFTER VIOLATE>>>>>>>>>>>>>"<<endl;
+   /*
+    for(auto it:x_i_p){
+        for(auto it2:it.first){
+           cout<<it2<<" ";
+        }
+       cout<<" with "<<it.second<<endl;
+    }
+    */
+//    cout<<"SET"<<endl;
+   int req_no = 0;
+    // for(auto it:x_i_s){
+    //     for(auto it2:it){
+    //         for(int set_num=1;set_num<it2.first.size()-1;set_num++){
+    //             vector<int>temp_path=all_given_path[req_no][(it2.first[set_num]-1)%path_num];
+    //             for(int node_index=0;node_index<temp_path.size();node_index++){
+    //                 cout<<temp_path[node_index]<<" ";
+    //             }
+    //             cout<<" with num:"<<it2.second<<"\n";
+    //         }
+    //        //cout<<" contain "<<it2.second<<endl;
+    //     }
+    //     ++req_no;
+    // }
+    double entangle_alpha=graph.get_entangle_alpha();    //取得entangle alpha
+    double UB = 0;                
+    req_no = 0;
+    for(auto it : x_i_s){                                  //對於每個req所選出來的所有set
+        for(auto it2 : it){                                //對於一個set
+            double prob = 1; 
+            for(int j=1;j<it2.first.size()-1;j++){       //對於這個set選的上層圖節點
+                double small_prob=1;
+                vector<int>temp_path=all_given_path[req_no][(it2.first[j]-1)%path_num];
+                for(int channel_index=0;channel_index<temp_path.size()-1;channel_index++){          //找所有邊
+                    Node* node1=graph.Node_id2ptr(temp_path[channel_index]);
+                    Node* node2=graph.Node_id2ptr(temp_path[channel_index+1]);
+                    prob *= exp(-entangle_alpha * (node1->distance(*node2)));                      //計算entangle機率
+                    small_prob *= exp(-entangle_alpha * (node1->distance(*node2)));
+                } 
+                for(int node_index = 1; node_index < temp_path.size()-1; node_index++){               //找所有點
+                    prob *= graph.Node_id2ptr(temp_path[node_index])->get_swap_prob();              //計算swap機率
+                    small_prob *= graph.Node_id2ptr(temp_path[node_index])->get_swap_prob();
+                }
+                // for(int node_index = 0; node_index < temp_path.size(); node_index++){               //找所有點
+                //     cout<<temp_path[node_index]<<" ";
+                // }
+                // cout<<" with "<< small_prob<<endl;
+            }
+            //cout<<"prob:"<<prob<<endl;
+            //cout << it2.second << " " << prob << " " << requests[req_no].get_value() << " " << requests[req_no].get_willness() << endl;
+            UB += it2.second * requests[req_no].get_send_demand() * prob * requests[req_no].get_value() * requests[req_no].get_willness() * pow(0.8,-2);     //UB=小數解值*總機率
+            //cout << "UB" << " " << UB << endl;
+        }
+        ++req_no;
+    }
+    res["UB"]=UB;
+    // cout<<"UB-----------"<<UB<<endl;
+    // cout << epsilon << endl;
+
 
     vector<map<vector<int>, int>>path = Greedy_rounding();
     //cout<<"greedy finished>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";

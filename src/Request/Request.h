@@ -29,10 +29,10 @@ protected:
     double fidelity;
     double total_prob = 0;
     int path_num = 0;
-    double before_ent_total_prob = 0;
-    int before_ent_path_num = 0;
+    double success_total_prob = 0;
+    int success_path_num = 0;
     vector<Path *> paths;                                       //休學
-    vector<double>before_ent_path_prob_vt;
+    vector<double>success_path_prob_vt;
 public:
     Request(int source, int destination, const int& time_limit);
     Request(int source, int destination, const int& time_limit, int send_demand, int value);
@@ -42,8 +42,8 @@ public:
     int get_send_demand();
     int get_value();
     int get_path_num();
-    int get_before_ent_path_num();
-    double get_before_ent_total_prob();
+    int get_success_path_num();
+    double get_success_total_prob();
 
     int get_source();
     int get_destination();
@@ -63,7 +63,7 @@ public:
     void next_timeslot();
     void add_cur(int num);
     int get_cur_send();
-    vector<double> get_before_ent_path_prob_vt();
+    vector<double> get_success_path_prob_vt();
     void operator+=(Path *path);
     void delete_path();
 
